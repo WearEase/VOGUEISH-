@@ -3,16 +3,20 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, X } from "lucide-react";
+import { Moon, ShoppingBag, Sun, Sunrise, X } from "lucide-react";
 import EmptyCart from "@/components/cart/EmptyCart";
 import CartItem from "@/components/cart/CartItem";
 import OrderSummary from "@/components/cart/OrderSummary";
 import { useCart } from "@/hooks/useCart";
 import { useHomeTrial } from "@/context/HomeTrialContext";
 
+type HomeTrialSlot = "morning" | "afternoon" | "evening";
+
 export default function CartPage() {
   const [customTailoring, setCustomTailoring] = useState(false);
+  const [tailoringMeasurements, setTailoringMeasurements] = useState("");
   const [homeTrial, setHomeTrial] = useState(false);
+  const [homeTrialSlot, setHomeTrialSlot] = useState<HomeTrialSlot | null>(null);
   const {
     trialItems,
     removeFromHomeTrial,
@@ -67,6 +71,8 @@ export default function CartPage() {
   }) => (
     <button
       onClick={onToggle}
+      type="button"
+      aria-pressed={enabled}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${enabled ? colorClass : "bg-gray-300"}`}
     >
       <span
@@ -76,7 +82,9 @@ export default function CartPage() {
   );
 
   const CustomTailoringCard = () => (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div
+      className={`rounded-xl border p-6 ${customTailoring ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200"}`}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-3 mb-1">
@@ -98,15 +106,41 @@ export default function CartPage() {
         </div>
         <ToggleSwitch
           enabled={customTailoring}
-          onToggle={() => setCustomTailoring((v) => !v)}
+          onToggle={() =>
+            setCustomTailoring((v) => {
+              const next = !v;
+              if (!next) setTailoringMeasurements("");
+              return next;
+            })
+          }
           colorClass="bg-blue-600 focus:ring-blue-500"
         />
       </div>
+
+      {customTailoring && (
+        <div className="mt-5 pt-5 border-t border-blue-200">
+          <p className="text-sm font-medium text-gray-900">Share your measurements</p>
+          <div className="mt-2">
+            <textarea
+              value={tailoringMeasurements}
+              onChange={(e) => setTailoringMeasurements(e.target.value)}
+              placeholder="Example: Chest: 38, Waist: 32 Shoulder: 16, Sleeve: 25"
+              rows={3}
+              className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <p className="mt-2 text-xs text-gray-600">
+            Our tailoring expert will contact you for precise measurements
+          </p>
+        </div>
+      )}
     </div>
   );
 
   const HomeTrialCard = () => (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div
+      className={`rounded-xl border p-6 ${homeTrial ? "bg-purple-50 border-purple-200" : "bg-white border-gray-200"}`}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-3 mb-1">
@@ -128,10 +162,65 @@ export default function CartPage() {
         </div>
         <ToggleSwitch
           enabled={homeTrial}
-          onToggle={() => setHomeTrial((v) => !v)}
+          onToggle={() =>
+            setHomeTrial((v) => {
+              const next = !v;
+              if (!next) setHomeTrialSlot(null);
+              return next;
+            })
+          }
           colorClass="bg-purple-600 focus:ring-purple-500"
         />
       </div>
+
+      {homeTrial && (
+        <div className="mt-5 pt-5 border-t border-purple-200">
+          <p className="text-sm font-medium text-gray-900">Choose your preferred trial time slot</p>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              type="button"
+              onClick={() => setHomeTrialSlot("morning")}
+              className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${homeTrialSlot === "morning" ? "border-purple-300 bg-white" : "border-gray-200 bg-white hover:bg-gray-50"}`}
+            >
+              <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-700">
+                <Sunrise className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-gray-900">Morning</div>
+                <div className="text-xs text-gray-500">9 AM - 12 PM</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setHomeTrialSlot("afternoon")}
+              className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${homeTrialSlot === "afternoon" ? "border-purple-300 bg-white" : "border-gray-200 bg-white hover:bg-gray-50"}`}
+            >
+              <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-700">
+                <Sun className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-gray-900">Afternoon</div>
+                <div className="text-xs text-gray-500">12 PM - 3 PM</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setHomeTrialSlot("evening")}
+              className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${homeTrialSlot === "evening" ? "border-purple-300 bg-white" : "border-gray-200 bg-white hover:bg-gray-50"}`}
+            >
+              <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-700">
+                <Moon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-gray-900">Evening</div>
+                <div className="text-xs text-gray-500">4 PM - 7 PM</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
