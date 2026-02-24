@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# local compare artifacts
+COMPARE_*.md
+_compare_*.json
+_folder_compare_meta.json
+_tmp_*.txt
+
 # debug
 npm-debug.log*
 yarn-debug.log*

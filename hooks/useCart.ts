@@ -26,8 +26,26 @@ export const useCart = () => {
     try {
       const cartData = JSON.parse(savedCart);
       const wishlistData = JSON.parse(savedWishlist);
-      
-      setCart(cartData);
+
+      // Normalize legacy cart items that might have `price` instead of `realPrice`
+      const normalizedCart: CartItem[] = Array.isArray(cartData)
+        ? cartData.map((item: any) => {
+            const realPrice =
+              typeof item?.realPrice === 'number'
+                ? item.realPrice
+                : typeof item?.price === 'number'
+                  ? item.price
+                  : 0;
+
+            return {
+              ...item,
+              realPrice,
+              quantity: typeof item?.quantity === 'number' ? item.quantity : 1,
+            } as CartItem;
+          })
+        : [];
+
+      setCart(normalizedCart);
       setWishlist(wishlistData);
     } catch (error) {
       console.error('Error loading cart/wishlist:', error);
@@ -76,7 +94,7 @@ export const useCart = () => {
       id: item.productId,
       name: item.name,
       brand: item.brand,
-      price: item.price,
+      price: item.realPrice,
       image: item.image,
       slug: item.slug,
     };
@@ -140,7 +158,7 @@ export const useCart = () => {
   };
 
   const getSubtotal = (): number => {
-    return cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    return cart.reduce((acc, item) => acc + item.realPrice * item.quantity, 0);
   };
 
   const getShippingFee = (): number => {
@@ -159,8 +177,8 @@ export const useCart = () => {
   const getSavings = (): number => {
     return cart.reduce((acc, item) => {
       // Assuming 20% discount from original price for demo
-      const originalPrice = Math.round(item.price * 1.25);
-      return acc + (originalPrice - item.price) * item.quantity;
+      const originalPrice = Math.round(item.realPrice * 1.25);
+      return acc + (originalPrice - item.realPrice) * item.quantity;
     }, 0) + discount;
   };
 

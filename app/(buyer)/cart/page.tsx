@@ -1,40 +1,48 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { useState } from "react";
-import CartHeader from "@/components/cart/CartHeader";
+import Image from "next/image";
+import Link from "next/link";
+import { ShoppingBag, X } from "lucide-react";
 import EmptyCart from "@/components/cart/EmptyCart";
 import CartItem from "@/components/cart/CartItem";
 import OrderSummary from "@/components/cart/OrderSummary";
 import { useCart } from "@/hooks/useCart";
+import { useHomeTrial } from "@/context/HomeTrialContext";
 
 export default function CartPage() {
-  // State for premium services toggles and inputs
   const [customTailoring, setCustomTailoring] = useState(false);
-  const [measurements, setMeasurements] = useState("");
   const [homeTrial, setHomeTrial] = useState(false);
-  const [trialSlot, setTrialSlot] = useState("");
+  const {
+    trialItems,
+    removeFromHomeTrial,
+    clearHomeTrial,
+    itemCount: trialCount,
+  } = useHomeTrial();
 
   // Cart hook state and actions
   const {
     cart,
-    wishlist,
     isLoading,
     notification,
     clearCart,
     updateQuantity,
     removeItem,
     moveToWishlist,
-    applyCouponCode,
-    removeCoupon,
     appliedCoupon,
     discount,
     getSavings,
-    coupons,
     getSubtotal,
+    getShippingFee,
+    getTax,
+    getTotal,
   } = useCart();
 
   const subtotal = getSubtotal();
+  const shippingFee = getShippingFee();
+  const tax = getTax();
+  const total = getTotal();
+  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   if (isLoading) {
     return (
@@ -67,223 +75,177 @@ export default function CartPage() {
     </button>
   );
 
-  // Custom Tailoring card JSX
   const CustomTailoringCard = () => (
-    <div
-      className={`relative p-5 rounded-xl border-2 transition-all duration-300 ${
-        customTailoring ? "border-blue-400 bg-blue-50 shadow-md" : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-      }`}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-blue-100">
-              <svg
-                className="w-5 h-5 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9m12 0v6m0 0v6m0-6h-4"
-                />
-              </svg>
+    <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="h-9 w-9 rounded-lg bg-blue-100 flex items-center justify-center">
+              <span className="text-blue-700 font-semibold">T</span>
             </div>
             <div>
               <h4 className="font-semibold text-gray-900">Custom Tailoring</h4>
               <p className="text-sm text-gray-600">Perfect fit guaranteed</p>
             </div>
           </div>
-          <p className="text-sm text-gray-700 mb-3">
+          <p className="text-sm text-gray-700 mt-3">
             Get your garments tailored to your exact measurements for the perfect fit every time.
           </p>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full">
-              Free alteration
-            </span>
-            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-              7-day delivery
-            </span>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full">Free alteration</span>
+            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">7-day delivery</span>
           </div>
         </div>
-        <div className="ml-4">
-          <ToggleSwitch
-            enabled={customTailoring}
-            onToggle={() => setCustomTailoring(!customTailoring)}
-            colorClass="bg-blue-600 focus:ring-blue-500"
-          />
-        </div>
+        <ToggleSwitch
+          enabled={customTailoring}
+          onToggle={() => setCustomTailoring((v) => !v)}
+          colorClass="bg-blue-600 focus:ring-blue-500"
+        />
       </div>
-
-      {customTailoring && (
-        <div className="mt-4 pt-4 border-t border-blue-200 animate-in slide-in-from-top-2 duration-200">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Share your measurements
-          </label>
-          <textarea
-            value={measurements}
-            onChange={(e) => setMeasurements(e.target.value)}
-            rows={3}
-            placeholder="Example: Chest: 38, Waist: 32 Shoulder: 16, Sleeve: 25"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Our tailoring expert will contact you for precise measurements
-          </p>
-        </div>
-      )}
     </div>
   );
 
-  // Home Trial card JSX
-const HomeTrialCard = () => {
-  const timeSlots = [
-    { value: "morning", label: "Morning", time: "9 AM - 12 PM", icon: "🌅" },
-    { value: "afternoon", label: "Afternoon", time: "12 PM - 3 PM", icon: "☀️" },
-    { value: "evening", label: "Evening", time: "4 PM - 7 PM", icon: "🌆" },
-  ];
-
-  return (
-    <div
-      className={`relative p-4 sm:p-5 rounded-xl border-2 transition-all duration-300 ${
-        homeTrial
-          ? "border-purple-400 bg-purple-50 shadow-md"
-          : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-      }`}
-    >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
-        <div className="flex-1">
-          <div className="flex items-start gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-purple-100">
-              <svg
-                className="w-5 h-5 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"
-                />
-              </svg>
+  const HomeTrialCard = () => (
+    <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="h-9 w-9 rounded-lg bg-purple-100 flex items-center justify-center">
+              <span className="text-purple-700 font-semibold">H</span>
             </div>
             <div>
               <h4 className="font-semibold text-gray-900">Home Trial</h4>
               <p className="text-sm text-gray-600">Try before you buy</p>
             </div>
           </div>
-          <p className="text-sm text-gray-700 mb-3">
+          <p className="text-sm text-gray-700 mt-3">
             Experience our outfits in the comfort of your home. Return what doesn&apos;t fit perfectly.
           </p>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full">Free service</span>
             <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full">3-day trial</span>
           </div>
         </div>
-        <div className="sm:ml-4">
-          <ToggleSwitch
-            enabled={homeTrial}
-            onToggle={() => setHomeTrial(!homeTrial)}
-            colorClass="bg-purple-600 focus:ring-purple-500"
-          />
-        </div>
+        <ToggleSwitch
+          enabled={homeTrial}
+          onToggle={() => setHomeTrial((v) => !v)}
+          colorClass="bg-purple-600 focus:ring-purple-500"
+        />
       </div>
-
-      {homeTrial && (
-        <div className="mt-4 pt-4 border-t border-purple-200 animate-in slide-in-from-top-2 duration-200">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Choose your preferred trial time slot
-          </label>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            {timeSlots.map(({ value, label, time, icon }) => (
-              <button
-                key={value}
-                onClick={() => setTrialSlot(value)}
-                type="button"
-                className={`flex w-full sm:w-auto items-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors focus:outline-none ${
-                  trialSlot === value
-                    ? "bg-purple-600 text-white border-transparent shadow"
-                    : "bg-white border-gray-300 text-gray-700 hover:bg-purple-50 hover:border-purple-400"
-                }`}
-              >
-                <span className="text-lg">{icon}</span>
-                <div className="text-left">
-                  <p>{label}</p>
-                  <p className="text-xs text-purple-300">{time}</p>
-                </div>
-                {trialSlot === value && (
-                  <Check className="ml-auto text-white" size={20} />
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
-};
 
-
-  if (cart.length === 0) {
+  if (cart.length === 0 && trialItems.length === 0) {
     return <EmptyCart />;
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto max-w-7xl px-6">
-        <CartHeader
-          clearCart={clearCart}
-          wishlist={wishlist}
-          cart={cart}
-          isLoading={isLoading}
-          notification={notification}
-        />
+    <main className="min-h-screen bg-gray-50 pb-12">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        {notification && (
+          <div className="pt-6">
+            <div className="rounded-lg bg-black text-white px-4 py-3 text-sm">
+              {notification}
+            </div>
+          </div>
+        )}
 
-        <section className="grid gap-12 md:grid-cols-[1fr_360px] mt-12">
-          {/* Left side - Cart Items and Addons */}
-          <div className="space-y-8">
-            {cart.map((item) => (
-              <CartItem
-                key={item.id}
-                item={item}
-                updateQuantity={updateQuantity}
-                removeItem={removeItem}
-                moveToWishlist={moveToWishlist}
-              />
-            ))}
+        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_360px]">
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 px-6 py-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ShoppingBag className="h-5 w-5 text-gray-900" />
+                <h1 className="text-lg font-semibold text-gray-900">Shopping Cart</h1>
+                <span className="text-sm text-gray-500">({totalItems + trialCount} items)</span>
+              </div>
+              {(cart.length > 0 || trialItems.length > 0) && (
+                <button
+                  onClick={() => {
+                    clearCart();
+                    clearHomeTrial();
+                  }}
+                  className="text-sm text-gray-600 hover:text-black"
+                  type="button"
+                >
+                  Clear cart
+                </button>
+              )}
+            </div>
 
-            {/* Addons Section */}
+            {cart.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+                {cart.map((item) => (
+                  <div key={item.id} className="p-6">
+                    <CartItem
+                      item={item}
+                      updateQuantity={updateQuantity}
+                      removeItem={removeItem}
+                      moveToWishlist={moveToWishlist}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {trialItems.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-900">Home Trial Bag</h2>
+                    <p className="text-sm text-gray-500">({trialItems.length} items)</p>
+                  </div>
+                  <Link href="/shop" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    Add more
+                  </Link>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {trialItems.map((item) => (
+                    <div key={`${item.id}-${item.selectedSize}`} className="p-6 flex gap-4">
+                      <div className="relative h-24 w-20 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 shrink-0">
+                        <Image src={item.mainImage} alt={item.name} fill className="object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
+                            <p className="text-sm text-gray-600">{item.brand}</p>
+                            <p className="text-sm text-gray-600 mt-1">Size: <span className="font-medium">{item.selectedSize}</span></p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFromHomeTrial(item.id, item.selectedSize)}
+                            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Remove"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="mt-3 text-sm font-semibold text-gray-900">{item.discountedPrice}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-6">
               <CustomTailoringCard />
               <HomeTrialCard />
             </div>
           </div>
 
-          {/* Right side - Order Summary */}
           <OrderSummary
-            cart={cart}
-            appliedCoupon={appliedCoupon}
-            discount={discount}
-            getSavings={getSavings}
-            coupons={coupons}
-            removeCoupon={removeCoupon}
-            applyCouponCode={applyCouponCode}
             subtotal={subtotal}
-            customTailoring={customTailoring}
-            homeTrial={homeTrial}
+            discount={discount}
+            appliedCoupon={appliedCoupon}
+            shippingFee={shippingFee}
+            tax={tax}
+            total={total}
+            totalItems={totalItems + trialItems.length}
+            savings={getSavings()}
+            freeShippingThreshold={1999}
           />
-        </section>
+        </div>
       </div>
     </main>
   );

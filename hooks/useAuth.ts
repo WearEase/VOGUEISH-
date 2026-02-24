@@ -30,8 +30,8 @@ export function useAuth() {
       }
       
       return { success: false, error: "Sign in failed" };
-    } catch (error: any) {
-      const errorMessage = error.message || "Sign in failed";
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Sign in failed";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -61,8 +61,8 @@ export function useAuth() {
       }
       
       return { success: false, error: "Sign in failed" };
-    } catch (error: any) {
-      const errorMessage = error.message || "Sign in failed";
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Sign in failed";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -73,6 +73,7 @@ export function useAuth() {
   const buyerSignUp = async (userData: {
     email: string;
     password: string;
+    confirmPassword: string;
     firstName: string;
     lastName: string;
     phone?: string;
@@ -81,7 +82,7 @@ export function useAuth() {
     setError(null);
     
     try {
-      const response = await fetch("/api/auth/buyer/signup", {
+      const response = await fetch("/api/auth/buyer/sign-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -98,8 +99,8 @@ export function useAuth() {
       // Auto sign in after successful registration
       const signInResult = await buyerSignIn(userData.email, userData.password);
       return signInResult;
-    } catch (error: any) {
-      const errorMessage = error.message || "Sign up failed";
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Sign up failed";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -132,8 +133,8 @@ export function useAuth() {
       }
 
       return { success: true, tempToken: data.tempToken };
-    } catch (error: any) {
-      const errorMessage = error.message || "Step 1 failed";
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Step 1 failed";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -168,8 +169,8 @@ export function useAuth() {
       }
 
       return { success: true, step3Token: data.step3Token };
-    } catch (error: any) {
-      const errorMessage = error.message || "Step 2 failed";
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Step 2 failed";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -201,8 +202,8 @@ export function useAuth() {
       }
 
       return { success: true };
-    } catch (error: any) {
-      const errorMessage = error.message || "Registration failed";
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Registration failed";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

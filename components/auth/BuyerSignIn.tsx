@@ -19,7 +19,7 @@ const BuyerSignIn = () => {
   const [error, setError] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
-
+  
   const {
     register, 
     handleSubmit,
@@ -116,7 +116,7 @@ const BuyerSignIn = () => {
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Don&apos;t have an account?{" "}
-            <Link href="/auth/buyer/signup" className="text-blue-600 hover:underline">
+            <Link href="/buyer/signup" className="text-blue-600 hover:underline">
               Sign up here
             </Link>
           </p>

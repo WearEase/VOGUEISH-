@@ -1,9 +1,10 @@
-// app/api/auth/buyer/signup/route.ts
+// app/api/auth/buyer/sign-up/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/UserSchema";
 import bcrypt from "bcryptjs";
 import { buyerSignUpSchema } from "@/schemas/authSchema";
+import { ZodError } from "zod";
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,23 +54,28 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Buyer signup error:", error);
-    
-    if (error.name === 'ZodError') {
+
+    if (error instanceof ZodError) {
       return NextResponse.json(
         { 
           error: "Invalid input data", 
-          details: error.errors.map((err: any) => ({
-            field: err.path.join('.'),
-            message: err.message
-          }))
+          details: error.errors.map((err) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
         },
         { status: 400 }
       );
     }
     
-    if (error.code === 11000) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code?: unknown }).code === 11000
+    ) {
       // MongoDB duplicate key error
       return NextResponse.json(
         { error: "User with this email already exists" },

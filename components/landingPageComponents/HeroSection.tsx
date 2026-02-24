@@ -1,7 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Cormorant_Garamond } from 'next/font/google';
+import { Cormorant_Garamond, Poppins } from 'next/font/google';
 import { Sparkles, Truck, Bot } from 'lucide-react'; 
 
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,12 @@ import { useRouter } from 'next/navigation';
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
+  display: 'swap',
+});
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
 });
 
@@ -35,9 +41,9 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
-          className={`text-6xl md:text-7xl font-extrabold leading-[1.2] tracking-tight ${cormorant.className}`}
+          className={`text-6xl md:text-7xl font-extrabold leading-[1.2] tracking-tight ${poppins.className}`}
         >
-          Vogueish
+          VOGUEISH
         </motion.h1>
 
         <motion.p

@@ -8,14 +8,14 @@ interface CartItemProps {
   item: CartItemType;
   updateQuantity: (id: string, change: number) => void;
   removeItem: (id: string) => void;
-  onMoveToWishlist: (item: CartItemType) => void;
+  moveToWishlist: (item: CartItemType) => void;
 }
 
 export default function CartItem({ 
   item, 
   updateQuantity, 
   removeItem, 
-  onMoveToWishlist 
+  moveToWishlist 
 }: CartItemProps) {
   return (
     <div className="flex gap-4">
@@ -45,7 +45,7 @@ export default function CartItem({
           </div>
           <div className="flex gap-2 ml-4">
             <button
-              onClick={() => onMoveToWishlist(item)}
+              onClick={() => moveToWishlist(item)}
               className="p-1 text-gray-400 hover:text-red-500 transition-colors"
               title="Move to Wishlist"
             >

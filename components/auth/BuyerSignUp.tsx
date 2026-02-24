@@ -4,13 +4,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { buyerSignUpSchema, BuyerSignUpData } from "@/schemas/authSchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
+import Link from "next/link";
 
 const BuyerSignUp = () => {
   const { buyerSignUp, isLoading, error, clearError } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const {
     register,
     handleSubmit,
@@ -33,6 +42,7 @@ const BuyerSignUp = () => {
         lastName: data.lastName,
         email: data.email,
         password: data.password,
+        confirmPassword: data.confirmPassword,
         phone: data.phone,
       });
 
@@ -56,98 +66,148 @@ const BuyerSignUp = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Input 
-            {...register("firstName")}
-            placeholder="First Name" 
-            className={errors.firstName ? "border-red-500" : ""}
-          />
-          {errors.firstName && (
-            <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
-          )}
-        </div>
+    <div className="mx-auto flex w-full max-w-lg flex-col justify-center px-4 py-10">
+      <Card>
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-xl">Create your account</CardTitle>
+          <CardDescription>
+            Sign up to continue shopping on Vogueish.
+          </CardDescription>
+        </CardHeader>
 
-        <div>
-          <Input 
-            {...register("lastName")}
-            placeholder="Last Name" 
-            className={errors.lastName ? "border-red-500" : ""}
-          />
-          {errors.lastName && (
-            <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
-          )}
-        </div>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First name</Label>
+                <Input
+                  id="firstName"
+                  autoComplete="given-name"
+                  {...register("firstName")}
+                  placeholder="Enter first name"
+                  aria-invalid={!!errors.firstName}
+                  className={errors.firstName ? "border-destructive focus-visible:ring-destructive" : ""}
+                />
+                {errors.firstName && (
+                  <p className="text-xs text-destructive">{errors.firstName.message}</p>
+                )}
+              </div>
 
-        <div>
-          <Input 
-            {...register("email")}
-            type="email"
-            placeholder="Email" 
-            className={errors.email ? "border-red-500" : ""}
-          />
-          {errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Input 
-            {...register("phone")}
-            placeholder="Phone Number (Optional)" 
-            className={errors.phone ? "border-red-500" : ""}
-          />
-          {errors.phone && (
-            <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Input 
-            {...register("password")}
-            type="password" 
-            placeholder="Password" 
-            className={errors.password ? "border-red-500" : ""}
-          />
-          {errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Input 
-            {...register("confirmPassword")}
-            type="password" 
-            placeholder="Confirm Password" 
-            className={errors.confirmPassword ? "border-red-500" : ""}
-          />
-          {errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
-          )}
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
-
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={isLoading || isSubmitting}
-        >
-          {isLoading || isSubmitting ? (
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Signing up...
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last name</Label>
+                <Input
+                  id="lastName"
+                  autoComplete="family-name"
+                  {...register("lastName")}
+                  placeholder="Enter last name"
+                  aria-invalid={!!errors.lastName}
+                  className={errors.lastName ? "border-destructive focus-visible:ring-destructive" : ""}
+                />
+                {errors.lastName && (
+                  <p className="text-xs text-destructive">{errors.lastName.message}</p>
+                )}
+              </div>
             </div>
-          ) : (
-            "Sign Up"
-          )}
-        </Button>
-      </form>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                {...register("email")}
+                placeholder="name@example.com"
+                aria-invalid={!!errors.email}
+                className={errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone (optional)</Label>
+              <Input
+                id="phone"
+                autoComplete="tel"
+                inputMode="tel"
+                {...register("phone")}
+                placeholder="10-digit phone number"
+                aria-invalid={!!errors.phone}
+                className={errors.phone ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+              {errors.phone && (
+                <p className="text-xs text-destructive">{errors.phone.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                {...register("password")}
+                placeholder="Create a password"
+                aria-invalid={!!errors.password}
+                className={errors.password ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+              {errors.password && (
+                <p className="text-xs text-destructive">{errors.password.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                {...register("confirmPassword")}
+                placeholder="Re-enter your password"
+                aria-invalid={!!errors.confirmPassword}
+                className={
+                  errors.confirmPassword
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : ""
+                }
+              />
+              {errors.confirmPassword && (
+                <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
+              )}
+            </div>
+
+            {error && (
+              <div className="rounded-md border border-destructive/20 bg-destructive/10 p-3">
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full" disabled={isLoading || isSubmitting}>
+              {isLoading || isSubmitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                    aria-hidden="true"
+                  />
+                  Signing up
+                </span>
+              ) : (
+                "Create account"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+
+        <CardFooter className="flex flex-col gap-2">
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Button asChild variant="link" className="h-auto p-0">
+              <Link href="/buyer/login">Sign in</Link>
+            </Button>
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

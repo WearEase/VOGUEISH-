@@ -37,7 +37,7 @@ const Navbar = () => {
       className={clsx(
         'top-0 left-0 w-full z-50 transition-colors duration-300 ease-in-out',
         isForceWhite
-          ? 'bg-white shadow-md'
+          ? 'bg-white shadow-md fixed'
           : isScrolled
             ? 'bg-white shadow-md fixed'
             : 'bg-transparent shadow-none fixed'
@@ -62,10 +62,45 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden lg:flex space-x-12 text-gray-700 text-lg">
-          <Link href="/shop" className="hover:text-black">Shop</Link>
-          <Link href="/ai-bot" className="hover:text-black">AI Bot</Link>
-          <Link href="/custom-tailoring" className="hover:text-black">Custom Tailoring</Link>
-          <Link href="/home-trials" className="hover:text-black">Home Trials</Link>
+          <Link
+            href="/shop"
+            className={clsx(
+              "hover:text-black",
+              pathname === "/shop" || pathname.startsWith("/shop/") ? "text-black" : ""
+            )}
+          >
+            Shop
+          </Link>
+          <Link
+            href="/ai-bot"
+            className={clsx("hover:text-black", pathname === "/ai-bot" ? "text-black" : "")}
+          >
+            AI Bot
+          </Link>
+          <Link
+            href="/custom-tailoring"
+            className={clsx(
+              "hover:text-black",
+              pathname === "/custom-tailoring" ? "text-black" : ""
+            )}
+          >
+            Custom Tailoring
+          </Link>
+          <Link
+            href="/home-trials"
+            className={clsx("hover:text-black", pathname === "/home-trials" ? "text-black" : "")}
+          >
+            Home Trials
+          </Link>
+          <Link
+            href="/donation"
+            className={clsx(
+              "hover:text-black",
+              pathname === "/donation" ? "text-black" : ""
+            )}
+          >
+            Donation
+          </Link>
         </div>
 
         {/* Icons */}
@@ -85,6 +120,7 @@ const Navbar = () => {
               <Link href="/ai-bot" className="block" onClick={() => setIsOpen(false)}>AI Bot</Link>
               <Link href="/custom-tailoring" className="block" onClick={() => setIsOpen(false)}>Custom Tailoring</Link>
               <Link href="/home-trials" className="block" onClick={() => setIsOpen(false)}>Home Trials</Link>
+              <Link href="/donation" className="block" onClick={() => setIsOpen(false)}>Donation</Link>
             </nav>
           </div>
         )
