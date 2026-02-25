@@ -8,21 +8,22 @@ import SortDropdown from "@/components/shop/SortDropDown";
 import ViewToggle from "@/components/shop/ViewToggle";
 import ProductGrid from "@/components/shop/ProductGrid";
 
+import type { Product } from "@/types/product";
+
 interface WishlistItem {
   id: string;
   name: string;
   brand: string;
-  price: string;
+  price: number;
   image: string;
   slug: string;
 }
 
-type WishlistProduct = {
-  slug: string;
-  name: string;
-  brand: string;
-  discountedPrice: string;
-  mainImage: string;
+const parsePrice = (value: number | string | undefined): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value !== 'string') return 0;
+  const numeric = Number(value.replace(/[^0-9.]/g, ''));
+  return Number.isFinite(numeric) ? numeric : 0;
 };
 
 // Dynamically extract unique brands and categories
@@ -90,7 +91,7 @@ export default function ShopPage() {
     });
   };
 
-  const toggleWishlist = (product: WishlistProduct) => {
+  const toggleWishlist = (product: Product) => {
     const isInWishlist = wishlist.some(item => item.slug === product.slug);
     if (isInWishlist) {
       setWishlist(prev => prev.filter(item => item.slug !== product.slug));
@@ -99,7 +100,7 @@ export default function ShopPage() {
         id: product.slug,
         name: product.name,
         brand: product.brand,
-        price: product.discountedPrice,
+        price: parsePrice(product.discountedPrice),
         image: product.mainImage,
         slug: product.slug,
       };

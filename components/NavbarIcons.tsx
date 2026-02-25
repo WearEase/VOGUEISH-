@@ -62,7 +62,7 @@ export default function NavbarIcons() {
             </Link>
 
             {/* User */}
-            <Link href="/login" className="p-2 text-black rounded-full hover:bg-gray-100 transition-colors">
+            <Link href="/my-account" className="p-2 text-black rounded-full hover:bg-gray-100 transition-colors" aria-label="My account">
                 <User size={24} className="text-gray-700 hover:text-black" />
             </Link>
         </div>

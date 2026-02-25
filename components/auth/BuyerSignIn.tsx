@@ -47,6 +47,19 @@ const BuyerSignIn = () => {
     setTimeout(() => {
       // Check credentials
       if (data.email === DEMO_CREDENTIALS.email && data.password === DEMO_CREDENTIALS.password) {
+        try {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              email: data.email,
+              name: "Demo Buyer",
+              type: "buyer",
+              loggedInAt: new Date().toISOString(),
+            })
+          );
+        } catch {
+          // ignore storage errors
+        }
         setIsAuthenticated(true); // Set authentication state
       } else {
         if (data.email !== DEMO_CREDENTIALS.email) {

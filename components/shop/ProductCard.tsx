@@ -2,15 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 
-interface Product {
-  slug: string;
-  name: string;
-  brand: string;
-  mainImage: string;
-  discountedPrice: number;
-  realPrice: number;
-  description?: string;
-}
+import type { Product } from "@/types/product";
 
 interface ProductCardProps {
   product: Product;
@@ -20,6 +12,18 @@ interface ProductCardProps {
   showDescription?: boolean;
 }
 
+const parsePrice = (value: number | string | undefined): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value !== 'string') return 0;
+  const numeric = Number(value.replace(/[^0-9.]/g, ''));
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+const formatINR = (value: number | string | undefined) => {
+  const numeric = parsePrice(value);
+  return new Intl.NumberFormat('en-IN').format(numeric);
+};
+
 export default function ProductCard({ 
   product, 
   viewMode = 'grid', 
@@ -27,8 +31,10 @@ export default function ProductCard({
   onToggleWishlist,
   showDescription = false 
 }: ProductCardProps) {
-  const discountPercentage = product.realPrice > product.discountedPrice 
-    ? Math.round(((product.realPrice - product.discountedPrice) / product.realPrice) * 100)
+  const real = parsePrice(product.realPrice);
+  const discounted = parsePrice(product.discountedPrice);
+  const discountPercentage = real > discounted 
+    ? Math.round(((real - discounted) / real) * 100)
     : 0;
 
   if (viewMode === 'list') {
@@ -68,11 +74,11 @@ export default function ProductCard({
               
               <div className="flex items-center gap-3">
                 <span className="font-bold text-xl text-gray-900">
-                  {product.discountedPrice.toLocaleString()}
+                  ₹{formatINR(product.discountedPrice)}
                 </span>
                 {discountPercentage > 0 && (
                   <span className="text-sm text-gray-500 line-through">
-                    {product.realPrice.toLocaleString()}
+                    ₹{formatINR(product.realPrice)}
                   </span>
                 )}
               </div>
@@ -131,11 +137,11 @@ export default function ProductCard({
           </h3>
           <div className="flex items-center gap-2">
             <span className="font-bold text-lg text-gray-900">
-              ₹{product.discountedPrice.toLocaleString()}
+              ₹{formatINR(product.discountedPrice)}
             </span>
             {discountPercentage > 0 && (
               <span className="text-sm text-gray-500 line-through">
-                ₹{product.realPrice.toLocaleString()}
+                ₹{formatINR(product.realPrice)}
               </span>
             )}
           </div>

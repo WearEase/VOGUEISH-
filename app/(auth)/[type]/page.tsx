@@ -18,7 +18,7 @@ const AuthPage = () => {
     ? "Log in to your account"
     : "Create an account";
   const subtitle = isBuyer
-    ? "Welcome to VOGUEISH (Buyer)"
+    ? "Welcome to VOGUEISH"
     : "Welcome to VOGUEISH (Seller)";
 
   const alternateRoute = isSignIn
