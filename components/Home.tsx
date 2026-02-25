@@ -13,8 +13,10 @@ const LandingPage = () => {
       <Navbar/>
      <HeroSection/> 
       <UspSection />
-      <TailorFitSection/>
-      <HomeTrialSection/>
+      <div id="home-trials" className="scroll-mt-24">
+        <TailorFitSection/>
+        <HomeTrialSection/>
+      </div>
       <AIPoweredRecommendationSection/>
       <ProductGrid />
     </main>

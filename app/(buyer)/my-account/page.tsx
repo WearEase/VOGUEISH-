@@ -7,7 +7,6 @@ import Image from "next/image";
 
 const MyAccount = () => {
   const router = useRouter();
-  const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
 
   // Simulate authentication check
@@ -16,37 +15,31 @@ const MyAccount = () => {
     if (!loggedInUser) {
       router.push("/buyer/signin"); // Redirect if not logged in
     } else {
-      setUser(loggedInUser);
-      fetchOrders();
+      const mockOrders = [
+        {
+          id: 1,
+          name: "Cotton Fit and Flare Dress",
+          price: 2999,
+          originalPrice: 4999,
+          discount: "40% Off",
+          rating: 4.2,
+          reviews: 68,
+          imageUrl: "/placeholder.png", // Replace with actual images
+        },
+        {
+          id: 2,
+          name: "Cotton Fit and Flare Dress",
+          price: 2999,
+          originalPrice: 4999,
+          discount: "40% Off",
+          rating: 4.2,
+          reviews: 68,
+          imageUrl: "/placeholder.png",
+        },
+      ];
+      setOrders(mockOrders);
     }
-  }, []);
-
-  // Fetch orders (simulate API call)
-  const fetchOrders = async () => {
-    const mockOrders = [
-      {
-        id: 1,
-        name: "Cotton Fit and Flare Dress",
-        price: 2999,
-        originalPrice: 4999,
-        discount: "40% Off",
-        rating: 4.2,
-        reviews: 68,
-        imageUrl: "/placeholder.png", // Replace with actual images
-      },
-      {
-        id: 2,
-        name: "Cotton Fit and Flare Dress",
-        price: 2999,
-        originalPrice: 4999,
-        discount: "40% Off",
-        rating: 4.2,
-        reviews: 68,
-        imageUrl: "/placeholder.png",
-      },
-    ];
-    setOrders(mockOrders);
-  };
+  }, [router]);
 
   return (
     <div className="flex p-6">

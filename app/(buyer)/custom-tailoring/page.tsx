@@ -67,7 +67,7 @@ const TailoringPage = () => {
       setActiveStep((prev) => (prev + 1) % tailoringSteps.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [tailoringSteps.length]);
 
   return (
     <div className="bg-white text-black">

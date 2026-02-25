@@ -12,14 +12,21 @@ interface WishlistItem {
   id: string;
   name: string;
   brand: string;
-  price: number;
+  price: string;
   image: string;
   slug: string;
 }
 
+type WishlistProduct = {
+  slug: string;
+  name: string;
+  brand: string;
+  discountedPrice: string;
+  mainImage: string;
+};
+
 // Dynamically extract unique brands and categories
 const uniqueBrands = Array.from(new Set(products.map(p => p.brand))).sort();
-const uniqueCategories = ["All", ...Array.from(new Set(products.map(p => p.gender || "Unisex"))).sort()];
 
 const staticFilterOptions = {
   priceRange: [
@@ -83,7 +90,7 @@ export default function ShopPage() {
     });
   };
 
-  const toggleWishlist = (product: any) => {
+  const toggleWishlist = (product: WishlistProduct) => {
     const isInWishlist = wishlist.some(item => item.slug === product.slug);
     if (isInWishlist) {
       setWishlist(prev => prev.filter(item => item.slug !== product.slug));

@@ -25,15 +25,15 @@ export default function AIBotPage() {
           </h1>
           <p className="text-gray-600 leading-relaxed text-lg">
             Ask me anything — from matching accessories to finding the perfect fit.
-            I'm here to elevate your shopping experience.
+            I&apos;m here to elevate your shopping experience.
           </p>
 
           <div className="hidden lg:block pt-8 space-y-4">
             <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-              <p className="text-sm font-medium text-gray-900">"What do I wear to a summer wedding?"</p>
+              <p className="text-sm font-medium text-gray-900">&quot;What do I wear to a summer wedding?&quot;</p>
             </div>
             <div className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 opacity-70">
-              <p className="text-sm font-medium text-gray-900">"Show me black leather jackets"</p>
+              <p className="text-sm font-medium text-gray-900">&quot;Show me black leather jackets&quot;</p>
             </div>
           </div>
         </div>

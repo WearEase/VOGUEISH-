@@ -13,7 +13,7 @@ const cormorant = Cormorant_Garamond({
 
 export default function TailorFitSection() {
   return (
-    <section className="relative w-full bg-white overflow-hidden py-24 px-6 md:px-20">
+    <section id="custom-tailoring" className="relative w-full bg-white overflow-hidden py-24 px-6 md:px-20 scroll-mt-24">
       {/* Background accent (optional subtle luxury pattern) */}
       <div className="absolute inset-0 z-0">
         <Image

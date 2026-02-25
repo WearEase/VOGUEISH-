@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useHomeTrial } from '@/context/HomeTrialContext';
-import { ShieldCheck, CreditCard, Wallet, Banknote } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function BillingPage() {
@@ -16,12 +16,6 @@ export default function BillingPage() {
     // Let's assume they are paying the Service Fee + buying 1 item for the demo.
 
     const SERVICE_FEE = 499;
-
-    // Calculate potential total if they keep everything (just for display)
-    const totalValue = trialItems.reduce((acc, item) => {
-        const price = parseInt(item.discountedPrice.replace(/[^\d]/g, '') || '0');
-        return acc + price;
-    }, 0);
 
     const handlePayment = async () => {
         setIsProcessing(true);

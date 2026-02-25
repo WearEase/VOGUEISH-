@@ -38,7 +38,7 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'Invalid registration token' },
         { status: 400 }

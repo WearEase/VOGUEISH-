@@ -53,7 +53,7 @@ function StepConnector({ active }: { active?: boolean }) {
 function Stepper({ step }: { step: Step }) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-3">
-      <CircleStep label="1. Select office" state={step > 1 ? "done" : step === 1 ? "active" : "todo"} />
+      <CircleStep label="1. Select Location" state={step > 1 ? "done" : step === 1 ? "active" : "todo"} />
       <StepConnector active={step >= 2} />
       <CircleStep label="2. Schedule pickup" state={step > 2 ? "done" : step === 2 ? "active" : "todo"} />
       <StepConnector active={step >= 3} />
@@ -115,7 +115,7 @@ export default function DonateFromAnywhere() {
           <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
             {step === 1 && (
               <>
-                <h2 className="font-serif text-3xl text-zinc-900">Select office</h2>
+                <h2 className="font-serif text-3xl text-zinc-900">Select Location</h2>
 
                 <div className="mt-4">
                   <div className="mt-2 flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2">

@@ -1,33 +1,45 @@
-import React from 'react'
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-  } from "@/components/ui/form"
-const FormField = () => 
-   (
-    <FormField
-    control={form.control}
-    name="username"
-    render={({ field }) => (
-      <FormItem>
-        <FormLabel>Username</FormLabel>
-        <FormControl>
-          <Input placeholder="shadcn" {...field} />
-        </FormControl>
-        <FormDescription>
-          This is your public display name.
-        </FormDescription>
-        <FormMessage />
-      </FormItem>
-    )}
-  />
-  )
+  FormControl,
+  FormDescription,
+  FormField as FormFieldPrimitive,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import type { Control, FieldPath, FieldValues } from "react-hook-form";
 
+type Props<TFieldValues extends FieldValues> = {
+  control: Control<TFieldValues>;
+  name: FieldPath<TFieldValues>;
+  label: string;
+  placeholder?: string;
+  description?: string;
+  type?: string;
+};
 
-export default FormField
+export default function FormField<TFieldValues extends FieldValues>({
+  control,
+  name,
+  label,
+  placeholder,
+  description,
+  type = "text",
+}: Props<TFieldValues>) {
+  return (
+    <FormFieldPrimitive
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input type={type} placeholder={placeholder} {...field} />
+          </FormControl>
+          {description ? <FormDescription>{description}</FormDescription> : null}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}

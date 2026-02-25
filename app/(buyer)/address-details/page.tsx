@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod'; // Ensure zod is installed or use standard validation
-import { ArrowLeft, Calendar, Clock, MapPin, User, Phone } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Schema for validation

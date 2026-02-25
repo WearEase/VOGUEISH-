@@ -87,8 +87,8 @@ const Navbar = () => {
             Custom Tailoring
           </Link>
           <Link
-            href="/home-trials"
-            className={clsx("hover:text-black", pathname === "/home-trials" ? "text-black" : "")}
+            href="/#home-trials"
+            className="hover:text-black"
           >
             Home Trials
           </Link>
@@ -119,7 +119,7 @@ const Navbar = () => {
               <Link href="/shop" className="block" onClick={() => setIsOpen(false)}>Shop</Link>
               <Link href="/ai-bot" className="block" onClick={() => setIsOpen(false)}>AI Bot</Link>
               <Link href="/custom-tailoring" className="block" onClick={() => setIsOpen(false)}>Custom Tailoring</Link>
-              <Link href="/home-trials" className="block" onClick={() => setIsOpen(false)}>Home Trials</Link>
+              <Link href="/#home-trials" className="block" onClick={() => setIsOpen(false)}>Home Trials</Link>
               <Link href="/donation" className="block" onClick={() => setIsOpen(false)}>Donation</Link>
             </nav>
           </div>

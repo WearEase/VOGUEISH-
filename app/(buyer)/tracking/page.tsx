@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Phone, User, ShieldCheck, Clock } from 'lucide-react';
+import { Phone, User } from 'lucide-react';
 
 export default function TrackingPage() {
     const router = useRouter();
