@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, User } from 'lucide-react';
 import { useHomeTrial } from '@/context/HomeTrialContext';
+import { useSession } from 'next-auth/react';
 
 // We can pass auth state as prop if needed, or use AuthContext if available
 // For now, mirroring existing Navbar structure but observing contexts
@@ -11,6 +12,8 @@ import { useHomeTrial } from '@/context/HomeTrialContext';
 export default function NavbarIcons() {
     const { itemCount: trialCount } = useHomeTrial();
     const [cartCount, setCartCount] = useState(0);
+    const { status } = useSession();
+    const [hasLocalUser, setHasLocalUser] = useState(false);
 
     const getQuantity = (item: unknown): number => {
         if (typeof item !== 'object' || item === null) return 1;
@@ -43,9 +46,26 @@ export default function NavbarIcons() {
         const onStorageChange = (e: StorageEvent) => {
             if (e.key === 'ecommerce-cart') loadCart();
         };
+
+        const onCartUpdated = () => loadCart();
+
         window.addEventListener('storage', onStorageChange);
-        return () => window.removeEventListener('storage', onStorageChange);
+        window.addEventListener('ecommerce-cart-updated', onCartUpdated);
+        return () => {
+            window.removeEventListener('storage', onStorageChange);
+            window.removeEventListener('ecommerce-cart-updated', onCartUpdated);
+        };
     }, []);
+
+    useEffect(() => {
+        try {
+            setHasLocalUser(!!localStorage.getItem('user'));
+        } catch {
+            setHasLocalUser(false);
+        }
+    }, []);
+
+    const isAuthed = status === 'authenticated' || hasLocalUser;
 
     return (
         <div className="flex space-x-6 items-center">
@@ -62,7 +82,11 @@ export default function NavbarIcons() {
             </Link>
 
             {/* User */}
-            <Link href="/my-account" className="p-2 text-black rounded-full hover:bg-gray-100 transition-colors" aria-label="My account">
+            <Link
+                href={isAuthed ? '/my-account' : '/login'}
+                className="p-2 text-black rounded-full hover:bg-gray-100 transition-colors"
+                aria-label={isAuthed ? 'My account' : 'Login'}
+            >
                 <User size={24} className="text-gray-700 hover:text-black" />
             </Link>
         </div>

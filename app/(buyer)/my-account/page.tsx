@@ -40,7 +40,7 @@ export default function MyAccountPage() {
 
   useEffect(() => {
     if (status === "unauthenticated" && !localUser) {
-      router.replace("/buyer-sign-in");
+      router.replace("/login");
     }
   }, [router, status, localUser]);
 
@@ -75,9 +75,9 @@ export default function MyAccountPage() {
       // ignore
     }
     if (status === "authenticated") {
-      await signOut({ redirect: true, callbackUrl: "/" });
+      await signOut({ redirect: true, callbackUrl: "/login" });
     } else {
-      router.push("/");
+      router.push("/login");
     }
   };
 
@@ -103,7 +103,7 @@ export default function MyAccountPage() {
             </button>
           ) : (
             <Link
-              href="/buyer-sign-in"
+              href="/login"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm hover:bg-gray-900 transition"
             >
               Sign in
@@ -120,10 +120,10 @@ export default function MyAccountPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/buyer-sign-in"
+                href="/login"
                 className="px-5 py-2.5 rounded-xl bg-black text-white text-sm hover:bg-gray-900 transition"
               >
-                Continue to Buyer Sign In
+                Continue to Sign In
               </Link>
               <Link
                 href="/login"

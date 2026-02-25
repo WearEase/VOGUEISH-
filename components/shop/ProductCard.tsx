@@ -1,8 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Heart } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
+import { toast } from "sonner";
 
 import type { Product } from "@/types/product";
+import type { CartItem } from "@/types/cart";
 
 interface ProductCardProps {
   product: Product;
@@ -22,6 +24,50 @@ const parsePrice = (value: number | string | undefined): number => {
 const formatINR = (value: number | string | undefined) => {
   const numeric = parsePrice(value);
   return new Intl.NumberFormat('en-IN').format(numeric);
+};
+
+const getDefaultSize = (product: Product): string => {
+  const sizes = Array.isArray(product.sizesAvailable) ? product.sizesAvailable : [];
+  return sizes.length > 0 ? String(sizes[0]) : 'M';
+};
+
+const addProductToCartStorage = (product: Product) => {
+  const size = getDefaultSize(product);
+  const cartItemId = `${product.slug}-${size}`;
+
+  try {
+    const raw = localStorage.getItem('ecommerce-cart') || '[]';
+    const existing = JSON.parse(raw) as unknown;
+    const cart: CartItem[] = Array.isArray(existing) ? (existing as CartItem[]) : [];
+
+    const idx = cart.findIndex((item) => item.id === cartItemId);
+    if (idx > -1) {
+      const current = cart[idx];
+      const nextQty = (typeof current.quantity === 'number' ? current.quantity : 1) + 1;
+      cart[idx] = { ...current, quantity: nextQty };
+    } else {
+      const numericPrice = parsePrice(product.discountedPrice);
+      const newItem: CartItem = {
+        id: cartItemId,
+        productId: product.id,
+        name: product.name,
+        brand: product.brand,
+        size,
+        realPrice: numericPrice,
+        quantity: 1,
+        image: product.mainImage,
+        slug: product.slug,
+        inStock: true,
+      };
+      cart.push(newItem);
+    }
+
+    localStorage.setItem('ecommerce-cart', JSON.stringify(cart));
+    window.dispatchEvent(new Event('ecommerce-cart-updated'));
+    toast.success('Added to cart');
+  } catch {
+    toast.error('Could not update cart');
+  }
 };
 
 export default function ProductCard({ 
@@ -84,16 +130,30 @@ export default function ProductCard({
               </div>
             </div>
             
-            <button
-              onClick={() => onToggleWishlist(product)}
-              className={`p-3 rounded-full transition-all duration-200 ${
-                isInWishlist 
-                  ? 'bg-red-50 text-red-500 hover:bg-red-100' 
-                  : 'bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-400'
-              }`}
-            >
-              <Heart className={`w-5 h-5 ${isInWishlist ? 'fill-current' : ''}`} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => addProductToCartStorage(product)}
+                className="p-3 rounded-full transition-all duration-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
+                aria-label="Add to cart"
+                title="Add to cart"
+              >
+                <ShoppingBag className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleWishlist(product)}
+                className={`p-3 rounded-full transition-all duration-200 ${
+                  isInWishlist 
+                    ? 'bg-red-50 text-red-500 hover:bg-red-100' 
+                    : 'bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-400'
+                }`}
+                aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                <Heart className={`w-5 h-5 ${isInWishlist ? 'fill-current' : ''}`} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -118,16 +178,30 @@ export default function ProductCard({
         </div>
       </Link>
       
-      <button
-        onClick={() => onToggleWishlist(product)}
-        className={`absolute top-3 right-3 p-2.5 rounded-full shadow-lg backdrop-blur-sm transition-all duration-200 ${
-          isInWishlist 
-            ? 'bg-red-500 text-white hover:bg-red-600' 
-            : 'bg-white/80 text-gray-600 hover:bg-red-50 hover:text-red-500'
-        }`}
-      >
-        <Heart className={`w-4 h-4 ${isInWishlist ? 'fill-current' : ''}`} />
-      </button>
+      <div className="absolute top-3 right-3 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => addProductToCartStorage(product)}
+          className="p-2.5 rounded-full shadow-lg bg-white/80 text-gray-700 hover:bg-white transition-all duration-200"
+          aria-label="Add to cart"
+          title="Add to cart"
+        >
+          <ShoppingBag className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onToggleWishlist(product)}
+          className={`p-2.5 rounded-full shadow-lg backdrop-blur-sm transition-all duration-200 ${
+            isInWishlist 
+              ? 'bg-red-500 text-white hover:bg-red-600' 
+              : 'bg-white/80 text-gray-600 hover:bg-red-50 hover:text-red-500'
+          }`}
+          aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+          title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+        >
+          <Heart className={`w-4 h-4 ${isInWishlist ? 'fill-current' : ''}`} />
+        </button>
+      </div>
 
       <div className="p-5">
         <Link href={`/shop/${product.slug}`}>

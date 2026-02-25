@@ -126,20 +126,17 @@ export const authOptions: NextAuthOptions = {
     },
     
     async redirect({ url, baseUrl }) {
-      // Redirect based on role after sign in
-      if (url.includes("seller-signin")) {
-        return `${baseUrl}/seller-dashboard`;
-      }
-      if (url.includes("buyer-signin")) {
-        return `${baseUrl}/shop`;
-      }
+      // Allow relative and same-origin callback URLs (used by signOut/signIn).
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith(baseUrl)) return url;
       return baseUrl;
     },
   },
   
   pages: {
-    signIn: "/auth/signin", // Custom sign-in page
-    error: "/auth/error",
+    // Use the shared buyer/seller entry page.
+    signIn: "/login",
+    error: "/login",
   },
   
   secret: process.env.NEXTAUTH_SECRET,

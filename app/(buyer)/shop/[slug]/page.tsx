@@ -21,11 +21,12 @@ interface CartItem {
   productId: string;
   name: string;
   brand: string;
-  price: number | string;
   size: string;
+  realPrice: number;
   quantity: number;
   image: string;
   slug: string;
+  inStock: boolean;
 }
 
 interface WishlistItem {
@@ -61,32 +62,49 @@ export default function ProductPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [showAddedToCart, setShowAddedToCart] = useState(false);
+  const [didHydrateStorage, setDidHydrateStorage] = useState(false);
 
   // Load cart and wishlist from localStorage on component mount
   useEffect(() => {
+    setDidHydrateStorage(false);
     const savedCart = localStorage.getItem('ecommerce-cart');
     const savedWishlist = localStorage.getItem('ecommerce-wishlist');
 
     if (savedCart) {
-      setCart(JSON.parse(savedCart));
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch {
+        setCart([]);
+      }
     }
 
     if (savedWishlist) {
-      const wishlistData = JSON.parse(savedWishlist);
-      setWishlist(wishlistData);
-      setIsInWishlist(wishlistData.some((item: WishlistItem) => item.slug === slug));
+      try {
+        const wishlistData = JSON.parse(savedWishlist);
+        setWishlist(wishlistData);
+        setIsInWishlist(wishlistData.some((item: WishlistItem) => item.slug === slug));
+      } catch {
+        setWishlist([]);
+        setIsInWishlist(false);
+      }
     }
+
+    // Prevent the initial "save" effects from overwriting storage with empty arrays.
+    setDidHydrateStorage(true);
   }, [slug]);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
+    if (!didHydrateStorage) return;
     localStorage.setItem('ecommerce-cart', JSON.stringify(cart));
-  }, [cart]);
+    window.dispatchEvent(new Event('ecommerce-cart-updated'));
+  }, [cart, didHydrateStorage]);
 
   // Save wishlist to localStorage whenever it changes
   useEffect(() => {
+    if (!didHydrateStorage) return;
     localStorage.setItem('ecommerce-wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
+  }, [wishlist, didHydrateStorage]);
 
   const addToCart = () => {
     if (!product || !selectedSize) {
@@ -95,28 +113,35 @@ export default function ProductPage() {
     }
 
     const cartItemId = `${product.slug}-${selectedSize}`;
-    const existingItemIndex = cart.findIndex(item => item.id === cartItemId);
+    const numericPrice = typeof product.discountedPrice === 'string'
+      ? Number(product.discountedPrice.replace(/[^0-9.]/g, ''))
+      : product.discountedPrice;
 
-    if (existingItemIndex > -1) {
-      // Update quantity if item already exists
-      const updatedCart = [...cart];
-      updatedCart[existingItemIndex].quantity += quantity;
-      setCart(updatedCart);
-    } else {
-      // Add new item to cart
+    setCart((prev) => {
+      const existingItemIndex = prev.findIndex((item) => item.id === cartItemId);
+      if (existingItemIndex > -1) {
+        const updatedCart = [...prev];
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: updatedCart[existingItemIndex].quantity + quantity,
+        };
+        return updatedCart;
+      }
+
       const newCartItem: CartItem = {
         id: cartItemId,
-        productId: product.slug,
+        productId: product.id,
         name: product.name,
         brand: product.brand,
-        price: product.discountedPrice,
+        realPrice: Number.isFinite(numericPrice) ? Number(numericPrice) : 0,
         size: selectedSize,
-        quantity: quantity,
+        quantity,
         image: product.mainImage,
         slug: product.slug,
+        inStock: true,
       };
-      setCart([...cart, newCartItem]);
-    }
+      return [...prev, newCartItem];
+    });
 
     toast.success('Added to cart! Redirecting...');
     setShowAddedToCart(true);
@@ -262,7 +287,7 @@ export default function ProductPage() {
                 {product.realPrice.toLocaleString()}
               </span>
               <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                {Math.round(((parseInt(product.realPrice.replace(/[^\d]/g, '')) - parseInt(product.discountedPrice.replace(/[^\d]/g, ''))) / parseInt(product.realPrice.replace(/[^\d]/g, ''))) * 100)}% OFF
+                {Math.round(((parseInt(String(product.realPrice).replace(/[^\d]/g, '')) - parseInt(String(product.discountedPrice).replace(/[^\d]/g, ''))) / parseInt(String(product.realPrice).replace(/[^\d]/g, ''))) * 100)}% OFF
               </span>
             </div>
 

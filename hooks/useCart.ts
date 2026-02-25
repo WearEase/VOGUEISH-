@@ -37,10 +37,16 @@ export const useCart = () => {
                   ? item.price
                   : 0;
 
+            const inStock =
+              typeof item?.inStock === 'boolean'
+                ? item.inStock
+                : true;
+
             return {
               ...item,
               realPrice,
               quantity: typeof item?.quantity === 'number' ? item.quantity : 1,
+              inStock,
             } as CartItem;
           })
         : [];
@@ -60,6 +66,7 @@ export const useCart = () => {
   useEffect(() => {
     if (!isLoading) {
       localStorage.setItem('ecommerce-cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('ecommerce-cart-updated'));
     }
   }, [cart, isLoading]);
 
