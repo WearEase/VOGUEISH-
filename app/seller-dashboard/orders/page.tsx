@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { formatINRFromUSD } from '@/lib/utils';
 
 
 interface Order {
@@ -254,7 +255,9 @@ const Orders: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.productName}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.grade}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.quantity}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${request.pricePerKg}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {formatINRFromUSD(request.pricePerKg, { seed: `${request.srNo}-${index}` })}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.deliveryLocation}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.deliveryTimeline}</td>
                   </tr>

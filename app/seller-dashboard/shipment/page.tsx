@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { Search, Plus, MapPin, Clock, User, Phone, MessageCircle, Package, Truck, CheckCircle } from 'lucide-react';
+import { formatINRFromUSD } from '@/lib/utils';
 
 interface Shipment {
   id: string;
@@ -334,7 +335,9 @@ const Shipments: React.FC = () => {
                   </div>
                   <div className="flex justify-between pt-2 border-t border-gray-200">
                     <span className="text-sm font-medium text-gray-900">Cost</span>
-                    <span className="text-lg font-bold text-gray-900">${shippingInfo.cost.toFixed(2)}</span>
+                    <span className="text-lg font-bold text-gray-900">
+                      {formatINRFromUSD(shippingInfo.cost, { seed: shippingInfo.trackingNumber })}
+                    </span>
                   </div>
                 </div>
 

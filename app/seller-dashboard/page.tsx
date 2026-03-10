@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { formatINRFromUSD } from '@/lib/utils';
 // import { useSession } from 'next-auth/react';
 // import { redirect } from 'next/navigation';
 
@@ -37,9 +38,9 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="AVG. Order Value" value="$77.21" change="+3.16%" positive />
-        <StatCard title="Total Orders" value="$2,107" change="-1.18%" />
-        <StatCard title="Lifetime Value" value="$653" change="+2.24%" positive />
+        <StatCard title="AVG. Order Value" value={formatINRFromUSD(77.21, { seed: 'avg-order-value' })} change="+3.16%" positive />
+        <StatCard title="Total Orders" value={formatINRFromUSD(2107, { seed: 'total-orders' })} change="-1.18%" />
+        <StatCard title="Lifetime Value" value={formatINRFromUSD(653, { seed: 'lifetime-value' })} change="+2.24%" positive />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
@@ -96,9 +97,9 @@ function ProductItem({ name, sales, stock }: { name: string; sales: string; stoc
 
 function LatestOrders() {
   const orders = [
-    { id: '#2456JL', product: 'Nike Sportswear', date: 'Jan 12, 12:23 pm', price: '$134.00', payment: 'Transfer', status: 'Processing' },
-    { id: '#5435DF', product: 'Acqua di Parma', date: 'May 01, 01:13 pm', price: '$23.00', payment: 'Credit Card', status: 'Completed' },
-    { id: '#9876XC', product: 'Allen Solly', date: 'Sep 20, 09:08 am', price: '$441.00', payment: 'Transfer', status: 'Completed' },
+    { id: '#2456JL', product: 'Nike Sportswear', date: 'Jan 12, 12:23 pm', price: 134, payment: 'Transfer', status: 'Processing' },
+    { id: '#5435DF', product: 'Acqua di Parma', date: 'May 01, 01:13 pm', price: 23, payment: 'Credit Card', status: 'Completed' },
+    { id: '#9876XC', product: 'Allen Solly', date: 'Sep 20, 09:08 am', price: 441, payment: 'Transfer', status: 'Completed' },
   ];
 
   return (
@@ -120,7 +121,7 @@ function LatestOrders() {
               <td className="px-6 py-4">{order.id}</td>
               <td className="px-6 py-4">{order.product}</td>
               <td className="px-6 py-4">{order.date}</td>
-              <td className="px-6 py-4">{order.price}</td>
+              <td className="px-6 py-4">{formatINRFromUSD(order.price, { seed: order.id })}</td>
               <td className="px-6 py-4">{order.payment}</td>
               <td className="px-6 py-4">
                 <Badge variant={order.status === 'Completed' ? 'default' : 'outline'} className={order.status === 'Completed' ? 'bg-green-500 text-white' : 'text-blue-600 border-blue-600'}>

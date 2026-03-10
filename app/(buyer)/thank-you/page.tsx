@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { CheckCircle, ShoppingBag } from 'lucide-react';
+import { CheckCircle, MapPin, ShoppingBag } from 'lucide-react';
 
 export default function ThankYouPage() {
     return (
@@ -25,6 +25,14 @@ export default function ThankYouPage() {
                     >
                         <ShoppingBag className="w-5 h-5" />
                         Continue Shopping
+                    </Link>
+
+                    <Link
+                        href="/tracking?variant=order"
+                        className="flex items-center justify-center gap-2 w-full border border-gray-200 text-gray-900 py-4 rounded-xl font-medium hover:bg-gray-50 transition-all"
+                    >
+                        <MapPin className="w-5 h-5" />
+                        Track Order
                     </Link>
                     <Link
                         href="/"

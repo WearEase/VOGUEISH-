@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { Search, Filter, MoreHorizontal} from 'lucide-react';
+import { formatINRFromUSD } from '@/lib/utils';
 
 interface Customer {
   id: string;
@@ -179,7 +180,7 @@ const Customers: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        ${customer.amount.toLocaleString()}
+                        {formatINRFromUSD(customer.amount, { seed: customer.id })}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Shield, Truck, ArrowRight } from "lucide-react";
 
 interface OrderSummaryProps {
@@ -10,6 +11,7 @@ interface OrderSummaryProps {
   totalItems?: number;
   savings?: number;
   freeShippingThreshold?: number;
+  checkoutHref?: string;
 }
 
 export default function OrderSummary({
@@ -22,6 +24,7 @@ export default function OrderSummary({
   totalItems = 0,
   savings = 0,
   freeShippingThreshold = 0,
+  checkoutHref = "/billing",
 }: OrderSummaryProps) {
   const remainingForFreeShipping = Math.max(freeShippingThreshold - subtotal, 0);
 
@@ -94,10 +97,13 @@ export default function OrderSummary({
           </div>
         )}
 
-        <button className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mb-4">
+        <Link
+          href={checkoutHref}
+          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mb-4"
+        >
           Proceed to Checkout
           <ArrowRight className="w-4 h-4" />
-        </button>
+        </Link>
 
         <div className="space-y-3 text-sm text-gray-600">
           <div className="flex items-center gap-2">

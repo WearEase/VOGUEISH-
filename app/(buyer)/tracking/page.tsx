@@ -1,17 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Phone, User } from 'lucide-react';
 
-export default function TrackingPage() {
+function TrackingContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const variant = searchParams.get('variant') === 'order' ? 'order' : 'trial';
     const [showOtp, setShowOtp] = useState(false);
     const [otp] = useState(Math.floor(1000 + Math.random() * 9000)); // Random 4-digit OTP
 
     const handleCompleteService = () => {
-        // Simulate service completion
-        router.push('/billing');
+        // Simulate next step
+        if (variant === 'trial') {
+            router.push('/otp?next=/billing');
+        } else {
+            router.push('/otp?next=/shop');
+        }
     };
 
     return (
@@ -24,22 +30,26 @@ export default function TrackingPage() {
                         <div className="absolute inset-0 bg-neutral-200 animate-pulse"></div>
                         <div className="relative z-10 bg-white px-4 py-2 rounded-full shadow-sm text-xs font-semibold flex items-center gap-2">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            Stylist is on the way
+                            {variant === 'trial' ? 'Stylist is on the way' : 'Courier is on the way'}
                         </div>
                     </div>
 
                     <div className="p-6">
-                        <h1 className="text-xl font-serif font-bold text-center mb-1">Tracking Order #TRK-8821</h1>
-                        <p className="text-center text-sm text-gray-500 mb-8">Arriving in approx. 25 mins</p>
+                        <h1 className="text-xl font-serif font-bold text-center mb-1">
+                            {variant === 'trial' ? 'Tracking Visit #TRK-8821' : 'Tracking Order #ORD-8821'}
+                        </h1>
+                        <p className="text-center text-sm text-gray-500 mb-8">
+                            {variant === 'trial' ? 'Arriving in approx. 25 mins' : 'Estimated delivery: 2–3 days'}
+                        </p>
 
-                        {/* Stylist Info */}
+                        {/* Agent Info */}
                         <div className="flex items-center gap-4 mb-8 bg-gray-50 p-4 rounded-xl">
                             <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
                                 <User className="w-6 h-6 text-gray-400" />
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-semibold text-sm">Sarah Jenkins</h3>
-                                <p className="text-xs text-gray-500">Expert Stylist • 4.9 ★</p>
+                                <h3 className="font-semibold text-sm">{variant === 'trial' ? 'Sarah Jenkins' : 'Delivery Partner'}</h3>
+                                <p className="text-xs text-gray-500">{variant === 'trial' ? 'Expert Stylist • 4.9 ★' : 'On the way • Live updates'}</p>
                             </div>
                             <button className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors">
                                 <Phone className="w-4 h-4 text-black" />
@@ -50,17 +60,17 @@ export default function TrackingPage() {
                         <div className="space-y-6 relative pl-4 border-l-2 border-gray-100 ml-2 mb-8">
                             <div className="relative">
                                 <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm"></div>
-                                <h4 className="text-sm font-semibold">Booking Confirmed</h4>
+                                <h4 className="text-sm font-semibold">{variant === 'trial' ? 'Booking Confirmed' : 'Order Confirmed'}</h4>
                                 <p className="text-xs text-gray-500 mt-0.5">10:30 AM</p>
                             </div>
                             <div className="relative">
                                 <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-sm animate-pulse"></div>
-                                <h4 className="text-sm font-semibold text-blue-600">Stylist Assigned</h4>
+                                <h4 className="text-sm font-semibold text-blue-600">{variant === 'trial' ? 'Stylist Assigned' : 'Shipped'}</h4>
                                 <p className="text-xs text-gray-500 mt-0.5">10:45 AM</p>
                             </div>
                             <div className="relative opacity-50">
                                 <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-gray-300 border-2 border-white shadow-sm"></div>
-                                <h4 className="text-sm font-semibold">Service Started</h4>
+                                <h4 className="text-sm font-semibold">{variant === 'trial' ? 'Service Started' : 'Out for Delivery'}</h4>
                                 <p className="text-xs text-gray-500 mt-0.5">Pending</p>
                             </div>
                         </div>
@@ -90,12 +100,22 @@ export default function TrackingPage() {
                             onClick={handleCompleteService}
                             className="text-xs text-blue-600 underline hover:text-blue-800"
                         >
-                            Simulate: Service Completed & Proceed to Billing
+                            {variant === 'trial'
+                                ? 'Next: Verify OTP & Proceed'
+                                : 'Next: Verify OTP & Continue'}
                         </button>
                     </div>
 
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function TrackingPage() {
+    return (
+        <Suspense>
+            <TrackingContent />
+        </Suspense>
     );
 }

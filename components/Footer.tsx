@@ -22,9 +22,9 @@ const Footer = () => {
         {/* Contact Info */}
         <div>
           <h3 className="text-xl text-white font-medium tracking-wide mb-4">Contact Us</h3>
-          <p className="text-sm">8819 Ohio St. South Gate, CA 90280</p>
-          <p className="text-sm mt-2">ourstudio@hello.com</p>
-          <p className="text-sm mt-2">+1 386-688-3295</p>
+          <p className="text-sm">9th level, Delhi Secretariat, New Delhi - 110002</p>
+          <p className="text-sm mt-2">customersupport@vogueish.live</p>
+          {/* <p className="text-sm mt-2">+1 386-688-3295</p> */}
         </div>
 
         {/* Policies & Socials */}
@@ -50,7 +50,7 @@ const Footer = () => {
 
       {/* Bottom Text */}
       <div className="text-center py-6 text-sm text-gray-500 tracking-wide">
-        © 2024 VOGUEISH. All rights reserved.
+        © 2026 VOGUEISH. All rights reserved.
       </div>
     </footer>
   );

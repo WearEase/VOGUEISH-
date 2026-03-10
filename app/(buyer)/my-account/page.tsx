@@ -75,9 +75,10 @@ export default function MyAccountPage() {
       // ignore
     }
     if (status === "authenticated") {
-      await signOut({ redirect: true, callbackUrl: "/login" });
+      await signOut({ redirect: false });
+      router.replace("/login");
     } else {
-      router.push("/login");
+      router.replace("/login");
     }
   };
 

@@ -214,7 +214,8 @@ export function useAuth() {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await signOut({ redirect: true, callbackUrl: "/login" });
+      await signOut({ redirect: false });
+      router.replace("/login");
     } finally {
       setIsLoading(false);
     }

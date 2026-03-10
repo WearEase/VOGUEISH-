@@ -47,6 +47,7 @@ export default function CartPage() {
   const tax = getTax();
   const total = getTotal();
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const checkoutHref = trialItems.length > 0 ? "/service-fees" : "/checkout";
 
   if (isLoading) {
     return (
@@ -333,6 +334,7 @@ export default function CartPage() {
             totalItems={totalItems + trialItems.length}
             savings={getSavings()}
             freeShippingThreshold={1999}
+            checkoutHref={checkoutHref}
           />
         </div>
       </div>
