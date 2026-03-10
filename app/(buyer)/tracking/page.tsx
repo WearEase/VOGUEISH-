@@ -25,10 +25,19 @@ function TrackingContent() {
             <div className="max-w-md mx-auto">
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
 
-                    {/* Map Placeholder */}
-                    <div className="bg-blue-50 h-48 relative flex items-center justify-center border-b border-gray-100">
-                        <div className="absolute inset-0 bg-neutral-200 animate-pulse"></div>
-                        <div className="relative z-10 bg-white px-4 py-2 rounded-full shadow-sm text-xs font-semibold flex items-center gap-2">
+                    {/* Map */}
+                    <div className="h-48 relative overflow-hidden">
+                        <iframe
+                            src="https://www.openstreetmap.org/export/embed.html?bbox=77.1967%2C28.6215%2C77.2367%2C28.6415&layer=mapnik&marker=28.6315%2C77.2167"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            loading="lazy"
+                            title="Order tracking map"
+                        />
+                        {/* Cover OSM attribution bar */}
+                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-white pointer-events-none"></div>
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-md text-xs font-semibold flex items-center gap-2 pointer-events-none">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                             {variant === 'trial' ? 'Stylist is on the way' : 'Courier is on the way'}
                         </div>
