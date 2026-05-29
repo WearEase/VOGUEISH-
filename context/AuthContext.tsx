@@ -1,13 +1,13 @@
 "use client";
 import { createContext, useContext, useState } from "react";
 
-const AuthContext = createContext();
+const AuthContext = createContext<any>(null);
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userType, setUserType] = useState(null); // 'buyer' or 'seller'
+  const [userType, setUserType] = useState<string | null>(null); // 'buyer' or 'seller'
 
-  const login = (type) => {
+  const login = (type: string | null) => {
     setIsAuthenticated(true);
     setUserType(type);
   };

@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
-const StepOne = ({ onNext }: { onNext: () => void }) => {
+const StepOne = ({ onNext }: { onNext: (tempToken: string) => void }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [otpDigits, setOtpDigits] = useState(["", "", "", ""]);
   const { sendOTP, sellerStep1, isLoading, error } = useAuth();
@@ -37,10 +37,10 @@ const StepOne = ({ onNext }: { onNext: () => void }) => {
 
     const result = await sendOTP(phone);
     
-    if (result) {
+    if (result.success) {
       setOtpSent(true);
-    } else if (error) {
-      setAuthError(error);
+    } else {
+      setAuthError(result.error || error || "Failed to send OTP");
     }
   };
 
@@ -65,10 +65,10 @@ const StepOne = ({ onNext }: { onNext: () => void }) => {
     setAuthError(null);
     const result = await sellerStep1(values);
     
-    if (result) {
-      onNext();
-    } else if (error) {
-      setAuthError(error);
+    if (result.success) {
+      onNext(result.tempToken || "");
+    } else {
+      setAuthError(result.error || error || "Step 1 failed");
     }
   };
 

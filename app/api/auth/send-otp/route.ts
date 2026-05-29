@@ -29,8 +29,10 @@ export async function POST(req: Request) {
       { upsert: true, new: true }
     );
     
-    // In production, send OTP via SMS here
-    console.log(`OTP for ${phone}: ${otp}`); // For development only
+    // In production, send OTP via SMS provider and never log OTP values.
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`OTP generated for ${phone}`);
+    }
     
     return NextResponse.json(
       { success: true, message: 'OTP sent successfully' },

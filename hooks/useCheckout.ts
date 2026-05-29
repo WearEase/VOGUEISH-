@@ -25,7 +25,7 @@ export const useCheckout = () => {
     // Mock shipping calculation
     const baseShipping = 9.99;
     const freeShippingThreshold = 100;
-    const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const totalValue = items.reduce((sum, item) => sum + (item.realPrice * item.quantity), 0);
     
     return totalValue >= freeShippingThreshold ? 0 : baseShipping;
   };
@@ -60,7 +60,7 @@ export const useCheckout = () => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = items.reduce((sum, item) => sum + (item.realPrice * item.quantity), 0);
     const shipping = calculateShipping(items, shippingAddress);
     const tax = calculateTax(subtotal, shippingAddress);
     const discount = promoCode 

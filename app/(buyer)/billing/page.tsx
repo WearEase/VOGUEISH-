@@ -16,6 +16,11 @@ export default function BillingPage() {
     // Let's assume they are paying the Service Fee + buying 1 item for the demo.
 
     const SERVICE_FEE = 499;
+    const itemPriceRaw = trialItems[0]?.discountedPrice;
+    const itemPrice =
+        typeof itemPriceRaw === 'number'
+            ? itemPriceRaw
+            : parseInt((itemPriceRaw || '2500').replace(/[^\d]/g, ''), 10);
 
     const handlePayment = async () => {
         setIsProcessing(true);
@@ -60,7 +65,7 @@ export default function BillingPage() {
                             </div>
                             <div className="pt-3 border-t border-gray-100 flex justify-between text-lg font-bold">
                                 <span>Total Due</span>
-                                <span>₹{Math.max(0, SERVICE_FEE + (parseInt(trialItems[0]?.discountedPrice?.replace(/[^\d]/g, '') || '2500')) - 1000).toLocaleString()}</span>
+                                <span>₹{Math.max(0, SERVICE_FEE + itemPrice - 1000).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>

@@ -1,67 +1,10 @@
-// app/api/auth/buyer/sign-in/route.ts
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { connectDB } from '@/lib/db';
-import { User } from '@/models/UserSchema';
-import { buyerSignInSchema } from '@/schemas/authSchema';
+import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    
-    // Validate input data
-    const validationResult = buyerSignInSchema.safeParse(body);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { error: validationResult.error.errors[0].message },
-        { status: 400 }
-      );
-    }
-    
-    const { email, password } = validationResult.data;
-    
-    await connectDB();
-    
-    const user = await User.findOne({ email, role: 'buyer' });
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-    
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-    
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id, email, role: 'buyer' },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '7d' }
-    );
-    
-    return NextResponse.json(
-      { 
-        success: true,
-        message: 'Login successful',
-        userId: user._id.toString(),
-        name: user.name,
-        email: user.email,
-        token
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('Error in buyer sign-in:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      error: "Legacy JWT login is disabled. Use NextAuth credentials provider 'buyer-signin'.",
+    },
+    { status: 410 }
+  );
 }

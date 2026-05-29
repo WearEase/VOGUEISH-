@@ -77,7 +77,14 @@ export function useAuth() {
     firstName: string;
     lastName: string;
     phone?: string;
-  }) => {
+  }): Promise<{
+    success: boolean;
+    error?: string;
+    requiresEmailVerification?: boolean;
+    message?: string;
+    emailSent?: boolean;
+    emailSendReason?: string;
+  }> => {
     setIsLoading(true);
     setError(null);
     
@@ -96,11 +103,158 @@ export function useAuth() {
         return { success: false, error: errorMessage };
       }
 
-      // Auto sign in after successful registration
-      const signInResult = await buyerSignIn(userData.email, userData.password);
-      return signInResult;
+      return {
+        success: true,
+        requiresEmailVerification: !!data.requiresEmailVerification,
+        message: data.message || "Account created",
+        emailSent: data.emailSent,
+        emailSendReason: data.emailSendReason,
+      };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Sign up failed";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const buyerGoogleSignIn = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await signIn("google-buyer", { callbackUrl: "/shop" });
+      return { success: true };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Google sign in failed";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sellerGoogleSignIn = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await signIn("google-seller", { callbackUrl: "/seller-dashboard" });
+      return { success: true };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Google sign in failed";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendVerificationLink = async (email: string, role?: "buyer" | "seller") => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMessage = data.error || "Failed to send verification link";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      return { success: true, message: data.message as string };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to send verification link";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendPasswordResetLink = async (email: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMessage = data.error || "Failed to send reset link";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      return { success: true, message: data.message as string };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to send reset link";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (payload: {
+    email: string;
+    token: string;
+    password: string;
+    confirmPassword: string;
+  }) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMessage = data.error || "Failed to reset password";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      return { success: true, message: data.message as string };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to reset password";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendOTP = async (phone: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMessage = data.error || "Failed to send OTP";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      return { success: true, message: data.message as string };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to send OTP";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -238,7 +392,16 @@ export function useAuth() {
     // Auth methods
     buyerSignIn,
     sellerSignIn,
+    buyerGoogleSignIn,
+    sellerGoogleSignIn,
     buyerSignUp,
+    sendVerificationLink,
+    sendPasswordResetLink,
+    resetPassword,
+    sendOTP,
+    sellerStep1: sellerSignUpStep1,
+    sellerStep2: sellerSignUpStep2,
+    sellerStep3: sellerSignUpStep3,
     sellerSignUpStep1,
     sellerSignUpStep2,
     sellerSignUpStep3,

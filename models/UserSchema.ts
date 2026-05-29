@@ -1,11 +1,13 @@
 import mongoose, { model, models, Schema } from "mongoose";
 
-// Replace the entire file with this unified approach:
 const userSchema = new Schema({
   email: {
     type: String,
     required: true,
     unique: true,
+  },
+  name: {
+    type: String,
   },
   password: {
     type: String,
@@ -28,6 +30,10 @@ const userSchema = new Schema({
   // Shared optional fields
   phone: String,
   isVerified: { type: Boolean, default: false },
+  emailVerificationToken: { type: String },
+  emailVerificationExpires: { type: Date },
+  passwordResetToken: { type: String },
+  passwordResetExpires: { type: Date },
   
   // Buyer-specific arrays
   addresses: [{
@@ -47,9 +53,6 @@ const userSchema = new Schema({
   products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   onboardingComplete: { type: Boolean, default: false },
   
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
-// Remove the separate Buyer/Seller exports - use only:
 export const User = models.User || model('User', userSchema);

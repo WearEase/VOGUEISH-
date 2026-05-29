@@ -11,36 +11,25 @@ interface ContactOption {
   action: () => void;
 }
 
-interface HelpSupportProps {
-  contactOptions?: ContactOption[];
-  onPhoneClick?: () => void;
-  onChatClick?: () => void;
-}
-
-const HelpSupport: React.FC<HelpSupportProps> = ({ 
-  contactOptions,
-  onPhoneClick,
-  onChatClick 
-}) => {
-  // Default contact options if none provided
+const HelpSupport: React.FC = () => {
   const defaultOptions: ContactOption[] = [
     {
       id: 'phone',
       title: 'Phone Support',
       description: 'Call us for immediate assistance',
       icon: <Phone className="w-8 h-8 text-gray-700" />,
-      action: onPhoneClick || (() => console.log('Phone support clicked'))
+      action: () => {}
     },
     {
       id: 'chat',
       title: 'Live Chat',
       description: 'Chat with our support team',
       icon: <MessageCircle className="w-8 h-8 text-gray-700" />,
-      action: onChatClick || (() => console.log('Live chat clicked'))
+      action: () => {}
     }
   ];
 
-  const displayOptions = contactOptions || defaultOptions;
+  const displayOptions = defaultOptions;
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">

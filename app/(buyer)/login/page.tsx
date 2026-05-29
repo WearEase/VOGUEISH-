@@ -4,45 +4,68 @@ import Link from 'next/link';
 
 export default function NotLoggedInPage() {
   return (
-    <div className="min-h-screen bg-neutral-100 flex flex-col justify-center items-center px-4">
-      {/* Brand Header */}
-      <header className="mb-12 text-center">
-        <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 tracking-tight">
-          Welcome to <span className="text-[#1e1e1e]">Vogueish</span>
-        </h1>
-        <p className="mt-4 text-lg text-gray-600 font-light max-w-md mx-auto">
-          Where elegance meets effortless fashion. Step into your personalized experience.
-        </p>
-      </header>
-
-      {/* Login Section */}
-      <div className="w-full max-w-2xl bg-white shadow-lg rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
-        {/* Left: Customer Section */}
-        <div className="p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">Explore as a Customer</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Buy premiuim quality products from top brands. Enjoy exclusive deals and offers.
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#f7f3ee_0%,_#f2efe9_35%,_#ffffff_100%)] px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-10">
+        <header className="max-w-2xl text-center">
+          <p className="text-sm font-medium uppercase tracking-[0.28em] text-neutral-500">Vogueish access</p>
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-neutral-950 sm:text-5xl lg:text-6xl">
+            One place for buyers to sign in or create an account.
+          </h1>
+          <p className="mt-4 text-base leading-7 text-neutral-600 sm:text-lg">
+            Continue to your order history, saved details, and home-trial experience without losing your flow.
           </p>
-          <div className="flex items-center flex-col justify-center w-full">
-            <Link href="/buyer-sign-in" className='w-full'>
-              <button className="w-full py-3 px-6 rounded-xl bg-black text-white font-medium tracking-wide hover:bg-gray-900 transition">
-                Login
-              </button>
+        </header>
+
+        <div className="grid w-full max-w-4xl overflow-hidden rounded-[2rem] border border-neutral-200 bg-white shadow-[0_30px_100px_-40px_rgba(0,0,0,0.4)] lg:grid-cols-2">
+          <div className="border-b border-neutral-200 p-8 sm:p-10 lg:border-b-0 lg:border-r">
+            <p className="text-sm uppercase tracking-[0.24em] text-neutral-500">Buyers</p>
+            <h2 className="mt-3 text-2xl font-semibold text-neutral-950">Continue your shopping journey</h2>
+            <p className="mt-3 text-sm leading-6 text-neutral-600">
+              Sign in to access your account, saved addresses, and personalized updates.
+            </p>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/buyer-sign-in"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-neutral-950 px-5 text-sm font-medium text-white transition hover:bg-neutral-800"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/buyer-sign-up"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-neutral-200 px-5 text-sm font-medium text-neutral-950 transition hover:bg-neutral-50"
+              >
+                Create account
+              </Link>
+            </div>
+
+            <div className="mt-8 grid gap-3">
+              {[
+                'Order tracking and delivery updates',
+                'Quick checkout with saved buyer details',
+                'Access to home trials and account history',
+              ].map((item) => (
+                <div key={item} className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-[linear-gradient(180deg,#181818_0%,#363636_100%)] p-8 text-white sm:p-10">
+            <p className="text-sm uppercase tracking-[0.24em] text-white/55">Seller portal</p>
+            <h2 className="mt-3 text-2xl font-semibold">For brands and merchants</h2>
+            <p className="mt-3 text-sm leading-6 text-white/72">
+              Manage onboarding, product flow, and customer requests from the seller dashboard.
+            </p>
+
+            <Link
+              href="/seller-sign-in"
+              className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-white px-5 text-sm font-medium text-neutral-950 transition hover:bg-white/90"
+            >
+              Seller login
             </Link>
           </div>
-        </div>
-
-        {/* Right: Seller Section */}
-        <div className="p-8 bg-gray-50 flex flex-col justify-between">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">Sell with Vogueish</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Join our seller portal and connect your brand to a premium customer base.
-          </p>
-          <Link href="/seller-sign-in">
-            <button className="w-full py-3 px-6 rounded-xl bg-purple-600 text-white font-medium tracking-wide hover:bg-purple-700 transition">
-              Seller Login
-            </button>
-          </Link>
         </div>
       </div>
     </div>

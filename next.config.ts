@@ -1,15 +1,27 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Ensure Next infers the correct workspace root when multiple lockfiles exist
+  outputFileTracingRoot: path.resolve(__dirname, ".."),
   /* config options here */
-    eslint: {
-    ignoreDuringBuilds: true,
+  eslint: {
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
-    images: {
-    domains: ["images.unsplash.com"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+    ],
   },
 
 };

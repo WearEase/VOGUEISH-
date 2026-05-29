@@ -7,9 +7,17 @@ import StepThree from "./sellerSteps/StepThree";
 
 const SellerSignUp = () => {
   const [step, setStep] = useState(1);
+  const [tempToken, setTempToken] = useState("");
+  const [step3Token, setStep3Token] = useState("");
 
-  const handleNext = () => {
-    setStep((prev) => prev + 1);
+  const handleStepOneNext = (token: string) => {
+    setTempToken(token);
+    setStep(2);
+  };
+
+  const handleStepTwoNext = (token: string) => {
+    setStep3Token(token);
+    setStep(3);
   };
 
   const handleBack = () => {
@@ -41,9 +49,9 @@ const SellerSignUp = () => {
 
       {/* Form Section */}
       <div className="w-full max-w-md space-y-6">
-        {step === 1 && <StepOne onNext={handleNext} />}
-        {step === 2 && <StepTwo onNext={handleNext} onBack={handleBack} />}
-        {step === 3 && <StepThree />}
+        {step === 1 && <StepOne onNext={handleStepOneNext} />}
+        {step === 2 && <StepTwo onNext={handleStepTwoNext} onBack={handleBack} tempToken={tempToken} />}
+        {step === 3 && <StepThree step3Token={step3Token} />}
       </div>
     </div>
   );

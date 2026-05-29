@@ -5,20 +5,13 @@ import { buyerSignInSchema } from "@/schemas/authSchema";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-
-// Demo credentials
-const DEMO_CREDENTIALS = {
-  email: "himanshikathuria64@gmail.com",
-  password: "vogueish05"
-};
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 const SellerSignIn = () => { 
+  const { sellerSignIn, sellerGoogleSignIn, sendVerificationLink, sendPasswordResetLink, isLoading, error, clearError } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const router = useRouter();
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof buyerSignInSchema>>({
     resolver: zodResolver(buyerSignInSchema),
@@ -28,28 +21,51 @@ const SellerSignIn = () => {
     },
   });
 
-  // Redirect if authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/seller-dashboard");
-    }
-  }, [isAuthenticated, router]);
-
   const onSubmit = async (data: z.infer<typeof buyerSignInSchema>) => {
+    clearError();
     setAuthError(null);
-    setIsLoading(true);
-    
-    // Simulate loading
-    setTimeout(() => {
-      // Check credentials
-      if (data.email === DEMO_CREDENTIALS.email && data.password === DEMO_CREDENTIALS.password) {
-        setIsAuthenticated(true); // Set authentication state
-      } else {
-        setAuthError("Invalid email or password");
-      }
-      setIsLoading(false);
-    }, 1000);
+    setAuthMessage(null);
+
+    const result = await sellerSignIn(data.email, data.password);
+    if (!result.success) {
+      setAuthError(result.error || "Sign in failed");
+    }
   };
+
+  const handleGoogleSellerSignIn = async () => {
+    clearError();
+    setAuthError(null);
+    setAuthMessage(null);
+    await sellerGoogleSignIn();
+  };
+
+  const handleResendVerification = async () => {
+    const email = form.watch("email") || "";
+    if (!email) {
+      form.setError("email", { type: "manual", message: "Enter your email first" });
+      return;
+    }
+
+    const response = await sendVerificationLink(email, "seller");
+    if (response.success) {
+      setAuthMessage(response.message || "Verification link sent");
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const email = form.watch("email") || "";
+    if (!email) {
+      form.setError("email", { type: "manual", message: "Enter your email first" });
+      return;
+    }
+
+    const response = await sendPasswordResetLink(email);
+    if (response.success) {
+      setAuthMessage(response.message || "Password reset link sent");
+    }
+  };
+
+  const message = authError || error;
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -63,13 +79,30 @@ const SellerSignIn = () => {
         <p className="text-red-500 text-sm">{form.formState.errors.password.message}</p>
       )}
       
-      {authError && (
-        <p className="text-red-500 text-sm">{authError}</p>
+      {message && (
+        <p className="text-red-500 text-sm">{message}</p>
+      )}
+
+      {authMessage && (
+        <p className="text-emerald-600 text-sm">{authMessage}</p>
       )}
       
       <Button type="submit" disabled={isLoading}>
         {isLoading ? "Signing in..." : "Sign In"}
       </Button>
+
+      <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSellerSignIn} disabled={isLoading}>
+        Continue with Google (Seller)
+      </Button>
+
+      <div className="flex items-center justify-between text-xs text-neutral-500">
+        <button type="button" onClick={handleResendVerification} className="hover:text-neutral-900">
+          Resend verification link
+        </button>
+        <button type="button" onClick={handleForgotPassword} className="hover:text-neutral-900">
+          Forgot password?
+        </button>
+      </div>
     </form>
   );
 };

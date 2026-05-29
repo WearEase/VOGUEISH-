@@ -12,10 +12,6 @@ interface FeedbackItem {
   images?: string[];
 }
 
-interface FeedbackProps {
-  feedbacks?: FeedbackItem[];
-}
-
 const StarRating: React.FC<{ rating: number; maxStars?: number }> = ({ 
   rating, 
   maxStars = 5 
@@ -135,7 +131,7 @@ const FeedbackDetailModal: React.FC<{
   );
 };
 
-const Feedback: React.FC<FeedbackProps> = ({ feedbacks = [] }) => {
+const Feedback: React.FC = () => {
   const [selectedFeedback, setSelectedFeedback] = React.useState<FeedbackItem | null>(null);
 
   // Default feedback data if none provided
@@ -190,7 +186,7 @@ const Feedback: React.FC<FeedbackProps> = ({ feedbacks = [] }) => {
     }
   ];
 
-  const displayFeedbacks = feedbacks.length > 0 ? feedbacks : defaultFeedbacks;
+  const displayFeedbacks = defaultFeedbacks;
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">

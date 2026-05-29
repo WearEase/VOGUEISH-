@@ -9,49 +9,78 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
-const StepTwo = ({ onNext, onBack }: { onNext: () => void; onBack: () => void }) => {
+const StepTwo = ({ onNext, onBack, tempToken }: { onNext: (step3Token: string) => void; onBack: () => void; tempToken: string }) => {
   const { sellerStep2, isLoading, error } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof sellerStep2Schema>>({
     resolver: zodResolver(sellerStep2Schema),
     defaultValues: {
-      password: "",
-      confirmPassword: ""
+      businessName: "",
+      address: "",
+      city: "",
+      state: "",
+      pincode: "",
+      tempToken,
     }
   });
 
   const onSubmit = async (data: z.infer<typeof sellerStep2Schema>) => {
     setAuthError(null);
-    const result = await sellerStep2(data);
+    const result = await sellerStep2({ ...data, tempToken });
     
-    if (result) {
-      onNext();
-    } else if (error) {
-      setAuthError(error);
+    if (result.success) {
+      onNext(result.step3Token || "");
+    } else {
+      setAuthError(result.error || error || "Step 2 failed");
     }
   };
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       <Input 
-        {...form.register("password")} 
-        placeholder="Password" 
-        type="password" 
+        {...form.register("businessName")} 
+        placeholder="Business Name" 
         className="w-full px-4 py-3 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
       />
-      {form.formState.errors.password && (
-        <p className="text-red-500 text-sm">{form.formState.errors.password.message}</p>
+      {form.formState.errors.businessName && (
+        <p className="text-red-500 text-sm">{form.formState.errors.businessName.message}</p>
       )}
       
       <Input 
-        {...form.register("confirmPassword")} 
-        placeholder="Confirm Password" 
-        type="password" 
+        {...form.register("address")} 
+        placeholder="Business Address" 
         className="w-full px-4 py-3 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
       />
-      {form.formState.errors.confirmPassword && (
-        <p className="text-red-500 text-sm">{form.formState.errors.confirmPassword.message}</p>
+      {form.formState.errors.address && (
+        <p className="text-red-500 text-sm">{form.formState.errors.address.message}</p>
+      )}
+
+      <Input 
+        {...form.register("city")} 
+        placeholder="City" 
+        className="w-full px-4 py-3 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+      />
+      {form.formState.errors.city && (
+        <p className="text-red-500 text-sm">{form.formState.errors.city.message}</p>
+      )}
+
+      <Input 
+        {...form.register("state")} 
+        placeholder="State" 
+        className="w-full px-4 py-3 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+      />
+      {form.formState.errors.state && (
+        <p className="text-red-500 text-sm">{form.formState.errors.state.message}</p>
+      )}
+
+      <Input 
+        {...form.register("pincode")} 
+        placeholder="Pincode" 
+        className="w-full px-4 py-3 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+      />
+      {form.formState.errors.pincode && (
+        <p className="text-red-500 text-sm">{form.formState.errors.pincode.message}</p>
       )}
       
       {authError && (

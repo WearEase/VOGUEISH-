@@ -10,19 +10,18 @@ export type SellerStep2FormData = z.infer<typeof sellerStep2Schema>;
 
 // Extended NextAuth types
 import "next-auth";
+import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   interface User {
     id: string;
-    role: string;
+    role: "buyer" | "seller";
   }
 
   interface Session {
-    user: {
+    user: DefaultSession["user"] & {
       id: string;
-      role: string;
-      email: string;
-      name?: string;
+      role: "buyer" | "seller";
     };
   }
 }
@@ -30,6 +29,6 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    role: string;
+    role: "buyer" | "seller";
   }
 }

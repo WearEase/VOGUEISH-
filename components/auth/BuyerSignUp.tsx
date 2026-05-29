@@ -16,10 +16,13 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 const BuyerSignUp = () => {
-  const { buyerSignUp, isLoading, error, clearError } = useAuth();
+  const { buyerSignUp, buyerGoogleSignIn, isLoading, error, clearError } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [messageTone, setMessageTone] = useState<"success" | "warning">("success");
   const {
     register,
     handleSubmit,
@@ -31,10 +34,11 @@ const BuyerSignUp = () => {
   });
 
   const onSubmit = async (data: BuyerSignUpData) => {
-    console.log("Buyer Sign Up", data);
     setIsSubmitting(true);
     clearError();
     clearErrors();
+    setSuccessMessage(null);
+    setMessageTone("success");
 
     try {
       const result = await buyerSignUp({
@@ -56,8 +60,10 @@ const BuyerSignUp = () => {
         } else {
           // Generic error will be shown from useAuth hook
         }
+      } else {
+        setMessageTone(result.emailSent === false ? "warning" : "success");
+        setSuccessMessage(result.message || "Account created. Check your email to verify your account.");
       }
-      // Success case is handled in useAuth hook (redirect to /shop)
     } catch (err) {
       console.error("Sign up error:", err);
     } finally {
@@ -65,9 +71,15 @@ const BuyerSignUp = () => {
     }
   };
 
+  const handleGoogleBuyer = async () => {
+    clearError();
+    setSuccessMessage(null);
+    await buyerGoogleSignIn();
+  };
+
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col justify-center px-4 py-10">
-      <Card>
+    <div className="mx-auto flex w-full max-w-xl flex-col justify-center px-4 py-10 sm:px-6 lg:px-8">
+      <Card className="overflow-hidden border-neutral-200/70 bg-white/95 shadow-[0_24px_80px_-30px_rgba(0,0,0,0.45)] backdrop-blur">
         <CardHeader className="space-y-2">
           <CardTitle className="text-xl">Create your account</CardTitle>
           <CardDescription>
@@ -183,6 +195,20 @@ const BuyerSignUp = () => {
               </div>
             )}
 
+            {successMessage && (
+              <div
+                className={
+                  messageTone === "warning"
+                    ? "rounded-md border border-amber-300/70 bg-amber-50 p-3"
+                    : "rounded-md border border-emerald-300/70 bg-emerald-50 p-3"
+                }
+              >
+                <p className={messageTone === "warning" ? "text-sm text-amber-700" : "text-sm text-emerald-700"}>
+                  {successMessage}
+                </p>
+              </div>
+            )}
+
             <Button type="submit" className="w-full" disabled={isLoading || isSubmitting}>
               {isLoading || isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
@@ -196,6 +222,11 @@ const BuyerSignUp = () => {
                 "Create account"
               )}
             </Button>
+
+            <Button type="button" variant="outline" className="w-full" onClick={handleGoogleBuyer} disabled={isLoading || isSubmitting}>
+              <Image src="/icons/google.svg" alt="Google" width={18} height={18} className="mr-2 inline-block shrink-0" />
+              Continue with Google
+            </Button>
           </form>
         </CardContent>
 
@@ -203,7 +234,7 @@ const BuyerSignUp = () => {
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Button asChild variant="link" className="h-auto p-0">
-              <Link href="/buyer/login">Sign in</Link>
+              <Link href="/buyer-sign-in">Sign in</Link>
             </Button>
           </p>
         </CardFooter>

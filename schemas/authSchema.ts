@@ -16,8 +16,18 @@ export const sellerStep1Schema = z.object({
 });
 
 export const sellerStep2Schema = z.object({
+  businessName: z.string().min(1, 'Business name is required'),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
+  pincode: z.string().min(4, 'Pincode is required'),
+  tempToken: z.string().min(1, 'Registration token is required'),
+});
+
+export const sellerStep3Schema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
+  step3Token: z.string().min(1, 'Registration token is required'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
