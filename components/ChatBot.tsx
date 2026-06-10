@@ -2,26 +2,171 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Sparkles, Bot } from 'lucide-react';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 interface Message {
     id: string;
     sender: 'user' | 'bot';
     text: string;
     timestamp: Date;
+    suggestions?: string[];
+    followUps?: string[];
+}
+
+type TranscriptMessage = {
+    sender: 'user' | 'bot';
+    text: string;
+};
+
+const GUEST_QUERY_LIMIT = 8;
+const GUEST_QUERY_COUNT_KEY = 'vogueish_guest_query_count';
+const GUEST_TRANSCRIPT_KEY = 'vogueish_guest_transcript';
+const GUEST_REFINED_KEY = 'vogueish_guest_refined';
+const GUEST_ENDED_KEY = 'vogueish_guest_ended';
+
+function renderInlineStyle(text: string) {
+        const parts = text.split(/(\*\*[^*]+\*\*)/g);
+
+        return parts.map((part, index) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                        return <strong key={`${part}-${index}`}>{part.slice(2, -2)}</strong>;
+                }
+
+                return <React.Fragment key={`${part}-${index}`}>{part}</React.Fragment>;
+        });
+}
+
+function RichMessage({ text }: { text: string }) {
+        const lines = text.split('\n').map((line) => line.trim()).filter(Boolean);
+
+        if (lines.length === 0) {
+            return null;
+        }
+
+        return (
+            <div className="space-y-2">
+                {lines.map((line, index) => {
+                    const isBullet = /^[-*•]\s+/.test(line);
+                    const content = line.replace(/^[-*•]\s+/, '');
+
+                    if (isBullet) {
+                        return (
+                            <div key={`${line}-${index}`} className="flex gap-2">
+                                <span className="mt-1 text-[10px] leading-4">•</span>
+                                <p className="leading-relaxed">{renderInlineStyle(content)}</p>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <p key={`${line}-${index}`} className="leading-relaxed">
+                            {renderInlineStyle(line)}
+                        </p>
+                    );
+                })}
+            </div>
+        );
 }
 
 export default function ChatBot() {
+    const { data: session } = useSession();
+    const [guestQueryCount, setGuestQueryCount] = useState(0);
+    const [isGuestLocked, setIsGuestLocked] = useState(false);
+    const [isGuestEnded, setIsGuestEnded] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
             sender: 'bot',
-            text: "Hello! I'm Vougeish AI. I can help you with style advice, returns, shipping, or finding the perfect outfit. How can I assist you today?",
+            text: "Hi, I’m your Vogueish stylist ✨ Tell me the occasion, your vibe, colors you like, and what you want to avoid. I’ll keep it practical and stylish.",
             timestamp: new Date(),
         }
     ]);
     const [inputText, setInputText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (session?.user) {
+            setGuestQueryCount(0);
+            setIsGuestLocked(false);
+            setIsGuestEnded(false);
+            return;
+        }
+
+        const storedCount = Number(window.localStorage.getItem(GUEST_QUERY_COUNT_KEY) ?? '0');
+        const safeCount = Number.isFinite(storedCount) ? storedCount : 0;
+        setGuestQueryCount(safeCount);
+        setIsGuestLocked(safeCount >= GUEST_QUERY_LIMIT);
+        setIsGuestEnded(window.localStorage.getItem(GUEST_ENDED_KEY) === 'true');
+    }, [session?.user]);
+
+    const readGuestTranscript = (): TranscriptMessage[] => {
+        try {
+            const raw = window.localStorage.getItem(GUEST_TRANSCRIPT_KEY);
+            const parsed = raw ? (JSON.parse(raw) as TranscriptMessage[]) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            return [];
+        }
+    };
+
+    const writeGuestTranscript = (nextTranscript: TranscriptMessage[]) => {
+        window.localStorage.setItem(GUEST_TRANSCRIPT_KEY, JSON.stringify(nextTranscript));
+    };
+
+    const refineGuestContext = async (transcript: TranscriptMessage[]) => {
+        const alreadyRefined = window.localStorage.getItem(GUEST_REFINED_KEY) === 'true';
+
+        if (alreadyRefined || transcript.length === 0) {
+            return;
+        }
+
+        const response = await fetch('/api/chat/refine', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ messages: transcript }),
+        });
+
+        if (!response.ok) {
+            return;
+        }
+
+        window.localStorage.setItem(GUEST_REFINED_KEY, 'true');
+        window.localStorage.removeItem(GUEST_TRANSCRIPT_KEY);
+    };
+
+    const endGuestChat = async () => {
+        if (session?.user || isGuestEnded) {
+            return;
+        }
+
+        const transcript = readGuestTranscript();
+
+        if (transcript.length > 0) {
+            setIsTyping(true);
+            try {
+                await refineGuestContext(transcript);
+            } finally {
+                setIsTyping(false);
+            }
+        }
+
+        window.localStorage.setItem(GUEST_ENDED_KEY, 'true');
+        window.localStorage.removeItem(GUEST_TRANSCRIPT_KEY);
+        window.localStorage.removeItem(GUEST_QUERY_COUNT_KEY);
+        setGuestQueryCount(0);
+        setIsGuestLocked(true);
+        setIsGuestEnded(true);
+        setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            sender: 'bot',
+            text: 'I’ve saved a compact style memory from this chat. Sign in to continue and I’ll keep your preferences ready ✨',
+            timestamp: new Date(),
+        }]);
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -31,34 +176,9 @@ export default function ChatBot() {
         scrollToBottom();
     }, [messages, isTyping]);
 
-    const generateResponse = (text: string): string => {
-        const lowerText = text.toLowerCase();
-
-        // Simple rule-based logic for demo
-        if (lowerText.includes('return') || lowerText.includes('exchange')) {
-            return "Returns are easy! You can return any item within 30 days of delivery. Just go to your order history to initiate a return. We also offer free pickups.";
-        }
-        if (lowerText.includes('shipping') || lowerText.includes('delivery')) {
-            return "We offer free shipping on orders above ₹1999. Valid orders usually arrive within 3-5 business days.";
-        }
-        if (lowerText.includes('size') || lowerText.includes('fit')) {
-            return "Unsure about sizing? I recommend checking our Size Guide on the product page. Or try our Home Trial service to try multiple sizes at home!";
-        }
-        if (lowerText.includes('home trial') || lowerText.includes('trial')) {
-            return "Our Home Trial service is perfect for you! Select 5-10 items, pay a small deposit, and our stylist will bring them to your doorstep. You only pay for what you keep.";
-        }
-        if (lowerText.includes('party') || lowerText.includes('black dress')) {
-            return "Looking for a party outfit? Our 'Midnight Velvet' collection is trending right now. I'd suggest pairing a black midi dress with silver accessories.";
-        }
-        if (lowerText.includes('men') || lowerText.includes('suit')) {
-            return "For men, our bespoke tailoring service is top-notch. Or check out our new arrivals in the Men's section for premium blazers.";
-        }
-
-        return "I see! That's interesting. Could you tell me more specifically what you're looking for? I can help with styling, sizing, or order support.";
-    };
-
     const handleSend = async () => {
         if (!inputText.trim()) return;
+        if (!session?.user && isGuestLocked) return;
 
         const userMsg: Message = {
             id: Date.now().toString(),
@@ -71,17 +191,79 @@ export default function ChatBot() {
         setInputText('');
         setIsTyping(true);
 
-        // Simulate network delay
-        setTimeout(() => {
+        try {
+            const nextCount = guestQueryCount + 1;
+            if (!session?.user) {
+                window.localStorage.setItem(GUEST_QUERY_COUNT_KEY, String(nextCount));
+                setGuestQueryCount(nextCount);
+                if (nextCount >= GUEST_QUERY_LIMIT) {
+                    setIsGuestLocked(true);
+                }
+            }
+
+            const nextTranscript: TranscriptMessage[] = !session?.user
+                ? [...readGuestTranscript(), { sender: 'user', text: userMsg.text }]
+                : [];
+
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    messages: [...messages, userMsg].map(({ sender, text }) => ({ sender, text })),
+                }),
+            });
+
+            const payload = await response.json();
+
             const botResponse: Message = {
                 id: (Date.now() + 1).toString(),
                 sender: 'bot',
-                text: generateResponse(userMsg.text),
+                text: payload.reply || payload.error || 'I could not generate a response right now.',
                 timestamp: new Date(),
+                suggestions: Array.isArray(payload.suggestions) ? payload.suggestions : [],
             };
+
             setMessages(prev => [...prev, botResponse]);
+
+            // Automatically trigger background refinement every 6 messages (3 full turns) to store memory in MongoDB
+            const totalMsgCount = messages.length + 2; // previous messages + userMsg + botResponse
+            if (totalMsgCount >= 6 && totalMsgCount % 6 === 0) {
+                const transcriptToRefine = [...messages, userMsg, botResponse].map(({ sender, text }) => ({ sender, text }));
+                fetch('/api/chat/refine', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: transcriptToRefine }),
+                }).catch(err => console.error("Auto-refinement failed:", err));
+            }
+
+            if (!session?.user) {
+                const transcriptWithAssistant: TranscriptMessage[] = [
+                    ...nextTranscript,
+                    { sender: 'bot', text: botResponse.text },
+                ];
+                writeGuestTranscript(transcriptWithAssistant);
+            }
+
+            if (!session?.user && nextCount >= GUEST_QUERY_LIMIT) {
+                setMessages(prev => [...prev, {
+                    id: (Date.now() + 2).toString(),
+                    sender: 'bot',
+                    text: 'I’ve helped with a few free questions now. You can end this chat to save a compact style memory, then sign in to continue ✨',
+                    timestamp: new Date(),
+                }]);
+            }
+        } catch {
+            setMessages(prev => [...prev, {
+                id: (Date.now() + 1).toString(),
+                sender: 'bot',
+                text: 'I am having trouble connecting to the stylist service right now. Please try again in a moment.',
+                timestamp: new Date(),
+            }]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -104,7 +286,21 @@ export default function ChatBot() {
                         </p>
                     </div>
                 </div>
-                <Sparkles className="text-yellow-400 w-5 h-5 opacity-50" />
+                <div className="flex items-center gap-3">
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/70">
+                        Free chats left: {Math.max(GUEST_QUERY_LIMIT - guestQueryCount, 0)}
+                    </span>
+                    {!session?.user && !isGuestEnded && (
+                        <button
+                            type="button"
+                            onClick={() => void endGuestChat()}
+                            className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-medium text-white transition-colors hover:bg-white/15"
+                        >
+                            End chat !
+                        </button>
+                    )}
+                    <Sparkles className="text-yellow-400 w-5 h-5 opacity-50" />
+                </div>
             </div>
 
             {/* Messages */}
@@ -130,7 +326,39 @@ export default function ChatBot() {
                                     ? 'bg-black text-white rounded-tr-none'
                                     : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
                                 }`}>
-                                {msg.text}
+                                <RichMessage text={msg.text} />
+                                {msg.suggestions && msg.suggestions.length > 0 && (
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {msg.suggestions.map((suggestion, index) => {
+                                            const suggestionObj = suggestion as unknown;
+                                            const text = typeof suggestionObj === 'object' && suggestionObj !== null
+                                                ? (suggestionObj as Record<string, unknown>).text as string || JSON.stringify(suggestionObj)
+                                                : String(suggestion);
+                                            return (
+                                                <span
+                                                    key={index}
+                                                    className="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-medium text-neutral-700"
+                                                >
+                                                    {text}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                {msg.followUps && msg.followUps.length > 0 && (
+                                    <div className="mt-4 rounded-xl border border-gray-100 bg-gray-50 p-3 text-gray-700">
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Need one quick detail</p>
+                                        <div className="mt-2 space-y-2 text-sm leading-relaxed">
+                                            {msg.followUps.slice(0, 2).map((followUp, index) => {
+                                                const followUpObj = followUp as unknown;
+                                                const text = typeof followUpObj === 'object' && followUpObj !== null
+                                                    ? (followUpObj as Record<string, unknown>).text as string || JSON.stringify(followUpObj)
+                                                    : String(followUp);
+                                                return <p key={index}>{text}</p>;
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
                                 <span className={`text-[10px] block mt-2 opacity-50 ${msg.sender === 'user' ? 'text-right' : 'text-left'
                                     }`}>
                                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -165,20 +393,35 @@ export default function ChatBot() {
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyDown={handleKeyPress}
-                        placeholder="Type your question..."
-                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                        placeholder={isGuestLocked || isGuestEnded ? "Sign in to keep chatting..." : "Type your fashion question..."}
+                        disabled={isGuestLocked || isGuestEnded}
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all disabled:cursor-not-allowed disabled:opacity-60"
                     />
                     <button
                         onClick={handleSend}
-                        disabled={!inputText.trim()}
+                        disabled={!inputText.trim() || isGuestLocked || isGuestEnded}
                         className="bg-black text-white p-3 rounded-xl hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Send className="w-5 h-5" />
                     </button>
                 </div>
-                <p className="text-center text-xs text-gray-400 mt-2">
-                    AI can make mistakes. Please contact support for critical issues.
-                </p>
+                {isGuestEnded || isGuestLocked ? (
+                    <div className="mt-3 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-4 text-center">
+                        <p className="text-sm text-gray-700">
+                            You’ve ended the guest chat. Sign in to continue the conversation and let me remember your style better ✨
+                        </p>
+                        <Link
+                            href="/login"
+                            className="mt-3 inline-flex items-center justify-center rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
+                        >
+                            Sign in to continue
+                        </Link>
+                    </div>
+                ) : (
+                    <p className="text-center text-xs text-gray-400 mt-2">
+                        AI can make mistakes. Please contact support for critical issues.
+                    </p>
+                )}
             </div>
         </div>
     );

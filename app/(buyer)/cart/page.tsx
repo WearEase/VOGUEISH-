@@ -10,13 +10,9 @@ import OrderSummary from "@/components/cart/OrderSummary";
 import { useCart } from "@/hooks/useCart";
 import { useHomeTrial } from "@/context/HomeTrialContext";
 
-type HomeTrialSlot = "morning" | "afternoon" | "evening";
-
 export default function CartPage() {
-  const [customTailoring, setCustomTailoring] = useState(false);
-  const [tailoringMeasurements, setTailoringMeasurements] = useState("");
   const [homeTrial, setHomeTrial] = useState(false);
-  const [homeTrialSlot, setHomeTrialSlot] = useState<HomeTrialSlot | null>(null);
+  const [homeTrialSlot, setHomeTrialSlot] = useState<"morning" | "afternoon" | "evening" | null>(null);
   const {
     trialItems,
     removeFromHomeTrial,
@@ -60,7 +56,6 @@ export default function CartPage() {
     );
   }
 
-  // Reusable Toggle Switch component
   const ToggleSwitch = ({
     enabled,
     onToggle,
@@ -71,71 +66,18 @@ export default function CartPage() {
     colorClass: string;
   }) => (
     <button
-      onClick={onToggle}
       type="button"
-      aria-pressed={enabled}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${enabled ? colorClass : "bg-gray-300"}`}
+      onClick={onToggle}
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+        enabled ? colorClass : "bg-gray-200"
+      }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enabled ? "translate-x-6" : "translate-x-1"}`}
+        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+          enabled ? "translate-x-5" : "translate-x-0"
+        }`}
       />
     </button>
-  );
-
-  const CustomTailoringCard = () => (
-    <div
-      className={`rounded-xl border p-6 ${customTailoring ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200"}`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="h-9 w-9 rounded-lg bg-blue-100 flex items-center justify-center">
-              <span className="text-blue-700 font-semibold">T</span>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900">Custom Tailoring</h4>
-              <p className="text-sm text-gray-600">Perfect fit guaranteed</p>
-            </div>
-          </div>
-          <p className="text-sm text-gray-700 mt-3">
-            Get your garments tailored to your exact measurements for the perfect fit every time.
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full">Free alteration</span>
-            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full">7-day delivery</span>
-          </div>
-        </div>
-        <ToggleSwitch
-          enabled={customTailoring}
-          onToggle={() =>
-            setCustomTailoring((v) => {
-              const next = !v;
-              if (!next) setTailoringMeasurements("");
-              return next;
-            })
-          }
-          colorClass="bg-blue-600 focus:ring-blue-500"
-        />
-      </div>
-
-      {customTailoring && (
-        <div className="mt-5 pt-5 border-t border-blue-200">
-          <p className="text-sm font-medium text-gray-900">Share your measurements</p>
-          <div className="mt-2">
-            <textarea
-              value={tailoringMeasurements}
-              onChange={(e) => setTailoringMeasurements(e.target.value)}
-              placeholder="Example: Chest: 38, Waist: 32 Shoulder: 16, Sleeve: 25"
-              rows={3}
-              className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <p className="mt-2 text-xs text-gray-600">
-            Our tailoring expert will contact you for precise measurements
-          </p>
-        </div>
-      )}
-    </div>
   );
 
   const HomeTrialCard = () => (
@@ -319,7 +261,6 @@ export default function CartPage() {
             )}
 
             <div className="space-y-6">
-              <CustomTailoringCard />
               <HomeTrialCard />
             </div>
           </div>

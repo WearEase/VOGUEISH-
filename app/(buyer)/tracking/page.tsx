@@ -1,15 +1,32 @@
-'use client';
+"use client";
 
 import React, { Suspense, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Phone, User } from 'lucide-react';
+import { demoOrders } from '@/data/orders';
 
 function TrackingContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const variant = searchParams.get('variant') === 'order' ? 'order' : 'trial';
+    const orderId = searchParams.get('orderId') ?? 'ORD-8821';
+    const order = demoOrders.find((item) => item.id === orderId) ?? demoOrders[0];
     const [showOtp, setShowOtp] = useState(false);
     const [otp] = useState(Math.floor(1000 + Math.random() * 9000)); // Random 4-digit OTP
+
+    React.useEffect(() => {
+        if (variant === 'order' && orderId) {
+            try {
+                const tracked = JSON.parse(localStorage.getItem('trackedOrders') || '[]');
+                if (!tracked.includes(orderId)) {
+                    localStorage.setItem('trackedOrders', JSON.stringify([...tracked, orderId]));
+                }
+            } catch {
+                // ignore
+            }
+        }
+    }, [variant, orderId]);
 
     const handleCompleteService = () => {
         // Simulate next step
@@ -48,7 +65,7 @@ function TrackingContent() {
                             {variant === 'trial' ? 'Tracking Visit #TRK-8821' : 'Tracking Order #ORD-8821'}
                         </h1>
                         <p className="text-center text-sm text-gray-500 mb-8">
-                            {variant === 'trial' ? 'Arriving in approx. 25 mins' : 'Estimated delivery: 2–3 days'}
+                            {variant === 'trial' ? 'Arriving in approx. 25 mins' : `${order.status} • Estimated delivery: 2–3 days`}
                         </p>
 
                         {/* Agent Info */}
@@ -84,6 +101,21 @@ function TrackingContent() {
                             </div>
                         </div>
 
+                        {variant === 'order' && (
+                            <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                <div className="flex items-start justify-between gap-3 flex-wrap">
+                                    <div>
+                                        <p className="text-xs uppercase tracking-widest text-gray-500">Order Details</p>
+                                        <h4 className="mt-1 font-semibold text-gray-900">{order.id}</h4>
+                                        <p className="text-sm text-gray-600">Placed on {order.placedAt}</p>
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                        {order.totalItems} item{order.totalItems > 1 ? 's' : ''} • ₹{order.totalAmount.toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* OTP Section */}
                         <div className="mb-6">
                             {!showOtp ? (
@@ -100,6 +132,24 @@ function TrackingContent() {
                                 </div>
                             )}
                         </div>
+
+                        {variant === 'order' && (
+                            <div className="mb-2 rounded-xl border border-black/10 bg-black text-white p-4">
+                                <div className="flex items-start justify-between gap-4 flex-wrap">
+                                    <div>
+                                        <p className="text-xs uppercase tracking-[0.3em] text-white/60">Need a better fit?</p>
+                                        <h4 className="mt-1 text-base font-semibold">Apply custom tailoring after tracking your order</h4>
+                                        <p className="mt-1 text-sm text-white/70">You can open tailoring for this order whenever you need adjustments.</p>
+                                    </div>
+                                    <Link
+                                        href="/custom-tailoring"
+                                        className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-gray-100 transition-colors"
+                                    >
+                                        Open tailoring
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
 
                     </div>
 

@@ -17,9 +17,10 @@ export default function HomeTrialSection() {
       {/* Background accent */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/trial-bg.jpg" 
+          src="/home-trial.jpg" 
           alt="Home Trial Background"
           fill
+          
           className="object-cover object-center opacity-10"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/90 to-white/80" />

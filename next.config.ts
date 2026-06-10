@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
-  // Ensure Next infers the correct workspace root when multiple lockfiles exist
-  outputFileTracingRoot: path.resolve(__dirname, ".."),
+  turbopack: {
+    root: projectRoot,
+  },
   /* config options here */
   eslint: {
     ignoreDuringBuilds: false,

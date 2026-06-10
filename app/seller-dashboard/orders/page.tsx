@@ -1,5 +1,5 @@
+"use client";
 // components/dashboard/Orders.tsx
-'use client';
 
 import React, { useState } from 'react';
 import { formatINRFromUSD } from '@/lib/utils';

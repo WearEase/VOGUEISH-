@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { useHomeTrial } from '@/context/HomeTrialContext';
 
 const generateOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
 
 function OtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { markHomeTrialCompleted } = useHomeTrial();
 
   const nextUrl = useMemo(() => {
     const next = searchParams.get('next');
@@ -43,6 +45,20 @@ function OtpContent() {
     }
 
     toast.success('OTP verified successfully.');
+    // If this OTP verification was requested as part of completing a Home Trial,
+    // mark the home trial as completed so downstream features (like advanced tailoring)
+    // can be enabled. Supported query flags: `completeHomeTrial=true` or `from=home-trial`.
+    try {
+      const fromParam = searchParams.get('from');
+      const completeFlag = searchParams.get('completeHomeTrial');
+      if (completeFlag === 'true' || fromParam === 'home-trial') {
+        // mark completion via context
+        markHomeTrialCompleted();
+        toast.success('Home Trial marked complete. Advanced tailoring now available.');
+      }
+    } catch {
+      // ignore
+    }
     router.replace(nextUrl);
   };
 

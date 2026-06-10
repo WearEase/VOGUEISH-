@@ -1,9 +1,16 @@
-// app/seller-dashboard/layout.tsx
 import React from 'react';
 import Link from 'next/link';
-import { Providers } from '../Providers';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
+import { redirect } from "next/navigation";
 
-export default function SellerDashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function SellerDashboardLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || session.user.role !== "seller") {
+    redirect("/seller-sign-in");
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       <aside className="w-64 bg-white shadow-lg p-6 border-r">
@@ -20,9 +27,7 @@ export default function SellerDashboardLayout({ children }: { children: React.Re
       </aside>
 
       <main className="flex-1 p-6 overflow-y-auto">
-        <Providers>
         {children}
-        </Providers>
       </main>
     </div>
   );

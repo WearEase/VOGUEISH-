@@ -1,5 +1,5 @@
+"use client";
 // components/dashboard/Shipments.tsx
-'use client';
 
 import React, { useState } from 'react';
 import { Search, Plus, MapPin, Clock, User, Phone, MessageCircle, Package, Truck, CheckCircle } from 'lucide-react';

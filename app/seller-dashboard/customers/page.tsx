@@ -1,5 +1,5 @@
+"use client";
 // components/dashboard/Customers.tsx
-'use client';
 
 import React, { useState } from 'react';
 import { Search, Filter, MoreHorizontal} from 'lucide-react';

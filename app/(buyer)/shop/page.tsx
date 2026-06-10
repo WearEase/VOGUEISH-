@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useState, useEffect, useMemo } from "react";
 import { Filter } from "lucide-react";
 import { products } from "@/data/products";

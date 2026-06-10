@@ -14,12 +14,21 @@ interface HomeTrialContextType {
     clearHomeTrial: () => void;
     isValidTrial: boolean; // True if 5 <= items <= 10
     itemCount: number;
+    homeTrialCompleted: boolean;
+    markHomeTrialCompleted: () => void;
 }
 
 const HomeTrialContext = createContext<HomeTrialContextType | undefined>(undefined);
 
 export function HomeTrialProvider({ children }: { children: ReactNode }) {
     const [trialItems, setTrialItems] = useState<HomeTrialItem[]>([]);
+    const [homeTrialCompleted, setHomeTrialCompleted] = useState<boolean>(() => {
+        try {
+            return localStorage.getItem('home-trial-completed') === 'true';
+        } catch (e) {
+            return false;
+        }
+    });
 
     // Load from localStorage on mount
     useEffect(() => {
@@ -37,6 +46,14 @@ export function HomeTrialProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         localStorage.setItem('home-trial-items', JSON.stringify(trialItems));
     }, [trialItems]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('home-trial-completed', homeTrialCompleted ? 'true' : 'false');
+        } catch (e) {
+            // ignore
+        }
+    }, [homeTrialCompleted]);
 
     const addToHomeTrial = (product: Product, size: string) => {
         if (trialItems.length >= 10) {
@@ -65,6 +82,10 @@ export function HomeTrialProvider({ children }: { children: ReactNode }) {
         setTrialItems([]);
     };
 
+    const markHomeTrialCompleted = () => {
+        setHomeTrialCompleted(true);
+    };
+
     const itemCount = trialItems.length;
     const isValidTrial = itemCount >= 5 && itemCount <= 10;
 
@@ -77,6 +98,8 @@ export function HomeTrialProvider({ children }: { children: ReactNode }) {
                 clearHomeTrial,
                 isValidTrial,
                 itemCount,
+                homeTrialCompleted,
+                markHomeTrialCompleted,
             }}
         >
             {children}
