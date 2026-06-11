@@ -147,24 +147,6 @@ function getCoordinatesForArea(area: string): { lat: number; lon: number } | nul
   return null;
 }
 
-function parseCSVLine(line: string) {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-  result.push(current.trim());
-  return result;
-}
 
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radius of earth in km
@@ -451,50 +433,20 @@ export default function DonateFromAnywhere() {
   useEffect(() => {
     async function loadNGOs() {
       try {
-        const res = await fetch("/VOGUEISH NGOs Sheet - Sheet1.csv");
-        const csvText = await res.text();
-        const lines = csvText.split(/\r?\n/);
-        const parsedNGOs: NGO[] = [];
+        const res = await fetch("/api/ngos");
+        const parsedNGOs: NGO[] = await res.json();
         const areas = new Set<string>();
 
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          const cols = parseCSVLine(line);
-          if (cols.length < 2) continue;
-          
-          let [name, area, address] = cols;
-          if (!area || !name) continue;
-          
-          const nameLower = name.toLowerCase();
-          const areaLower = area.toLowerCase();
-          if (
-            nameLower === 'ngo name' || 
-            nameLower === 'ngo' || 
-            nameLower === 'area' || 
-            areaLower === 'area' || 
-            areaLower === 'ngo' ||
-            nameLower.includes("belt") ||
-            (nameLower.includes("delhi") && area === "" && address === "")
-          ) {
-            continue;
+        for (const ngo of parsedNGOs) {
+          if (ngo.area) {
+            areas.add(ngo.area);
           }
-          
-          name = name.replace(/^"|"$/g, '').trim();
-          area = area.replace(/^"|"$/g, '').trim();
-          address = (address || "").replace(/^"|"$/g, '').trim();
-          
-          const coords = getCoordinatesForArea(area);
-          const lat = coords ? coords.lat : 28.6139;
-          const lon = coords ? coords.lon : 77.2090;
-          
-          parsedNGOs.push({ name, area, address, lat, lon });
-          areas.add(area);
         }
         
         setNgos(parsedNGOs);
         setAllAreas(Array.from(areas).sort());
       } catch (err) {
-        console.error("Error loading NGOs CSV:", err);
+        console.error("Error loading NGOs from API:", err);
       }
     }
     loadNGOs();

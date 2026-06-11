@@ -5,16 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { 
-  LayoutDashboard, 
-  ShoppingBag, 
-  Users, 
-  ListOrdered, 
-  Truck, 
-  MessageSquare, 
-  HelpCircle, 
-  Sun, 
-  Moon 
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  Users,
+  ListOrdered,
+  Truck,
+  MessageSquare,
+  HelpCircle,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 interface SidebarLinkProps {
@@ -38,12 +38,24 @@ export default function SellerSidebar() {
 
   const links: SidebarLinkProps[] = [
     { href: "/seller-dashboard", label: "Overview", icon: LayoutDashboard },
-    { href: "/seller-dashboard/products", label: "Products", icon: ShoppingBag },
+    {
+      href: "/seller-dashboard/products",
+      label: "Products",
+      icon: ShoppingBag,
+    },
     { href: "/seller-dashboard/customers", label: "Customer", icon: Users },
     { href: "/seller-dashboard/orders", label: "Orders", icon: ListOrdered },
     { href: "/seller-dashboard/shipment", label: "Shipment", icon: Truck },
-    { href: "/seller-dashboard/feedback", label: "Feedback", icon: MessageSquare },
-    { href: "/seller-dashboard/support", label: "Help & Support", icon: HelpCircle },
+    {
+      href: "/seller-dashboard/feedback",
+      label: "Feedback",
+      icon: MessageSquare,
+    },
+    {
+      href: "/seller-dashboard/support",
+      label: "Help & Support",
+      icon: HelpCircle,
+    },
   ];
 
   return (
@@ -73,7 +85,9 @@ export default function SellerSidebar() {
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-                <Icon className={`w-4 h-4 ${isActive ? "text-purple-600 dark:text-purple-400" : "text-gray-400 dark:text-gray-500"}`} />
+                <Icon
+                  className={`w-4 h-4 ${isActive ? "text-purple-600 dark:text-purple-400" : "text-gray-400 dark:text-gray-500"}`}
+                />
                 <span>{link.label}</span>
               </Link>
             );
