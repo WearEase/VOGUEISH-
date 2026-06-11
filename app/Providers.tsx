@@ -2,6 +2,7 @@
 import { SessionProvider } from "next-auth/react";
 import { HomeTrialProvider } from "@/context/HomeTrialContext";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "next-themes";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -9,10 +10,12 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <SessionProvider>
-      <HomeTrialProvider>
-        {children}
-        <Toaster position="top-center" richColors />
-      </HomeTrialProvider>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <HomeTrialProvider>
+          {children}
+          <Toaster position="top-center" richColors />
+        </HomeTrialProvider>
+      </ThemeProvider>
     </SessionProvider>
   );
 }

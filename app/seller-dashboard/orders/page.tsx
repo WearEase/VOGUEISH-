@@ -3,6 +3,8 @@
 
 import React, { useState } from 'react';
 import { formatINRFromUSD } from '@/lib/utils';
+import { MoreHorizontal } from 'lucide-react';
+import { toast } from 'sonner';
 
 
 interface Order {
@@ -36,45 +38,46 @@ interface ChartComponentProps {
 }
 
 const Orders: React.FC = () => {
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [orders] = useState<Order[]>([
     {
       id: '1',
       dispatchDate: '22/02/25',
       productId: '3213',
-      userItem: '1',
-      deliveryLocation: 'India',
+      userItem: 'Aarav Sharma',
+      deliveryLocation: 'Delhi, India',
       status: 'dispatched'
     },
     {
       id: '2',
       dispatchDate: '23/02/25',
       productId: '3213',
-      userItem: '1',
-      deliveryLocation: 'India',
+      userItem: 'Priya Patel',
+      deliveryLocation: 'Mumbai, India',
       status: 'shipped'
     },
     {
       id: '3',
       dispatchDate: '24/02/25',
       productId: '3213',
-      userItem: '1',
-      deliveryLocation: 'India',
+      userItem: 'Rohan Mehta',
+      deliveryLocation: 'Bangalore, India',
       status: 'delivered'
     },
     {
       id: '4',
       dispatchDate: '25/02/25',
       productId: '3213',
-      userItem: '1',
-      deliveryLocation: 'India',
+      userItem: 'Ananya Iyer',
+      deliveryLocation: 'Delhi, India',
       status: 'dispatched'
     },
     {
       id: '5',
       dispatchDate: '26/02/25',
       productId: '3213',
-      userItem: '1',
-      deliveryLocation: 'India',
+      userItem: 'Aditya Verma',
+      deliveryLocation: 'Chennai, India',
       status: 'shipped'
     }
   ]);
@@ -82,48 +85,48 @@ const Orders: React.FC = () => {
   const [spotBuyRequests] = useState<SpotBuyRequest[]>([
     {
       srNo: 24,
-      productName: 'Name 1',
+      productName: 'Banarasi Silk Lehenga',
       grade: '3213',
       quantity: '05',
       pricePerKg: 4000,
-      deliveryLocation: 'Lorem',
-      deliveryTimeline: 'Lorem'
+      deliveryLocation: 'Delhi Region',
+      deliveryTimeline: '5-7 Days'
     },
     {
       srNo: 24,
-      productName: 'Name 1',
+      productName: 'Embroidered Sherwani',
       grade: '3213',
       quantity: '10',
       pricePerKg: 4000,
-      deliveryLocation: 'Lorem',
-      deliveryTimeline: 'Lorem'
+      deliveryLocation: 'Noida Region',
+      deliveryTimeline: '4-6 Days'
     },
     {
       srNo: 24,
-      productName: 'Name 1',
+      productName: 'Pashmina Shawl',
       grade: '3213',
       quantity: '200 Kg',
       pricePerKg: 4000,
-      deliveryLocation: 'Lorem',
-      deliveryTimeline: 'Lorem'
+      deliveryLocation: 'Gurugram Region',
+      deliveryTimeline: '3-5 Days'
     },
     {
       srNo: 24,
-      productName: 'Name 1',
+      productName: 'Designer Cotton Kurta',
       grade: '3213',
       quantity: '200 Kg',
       pricePerKg: 4000,
-      deliveryLocation: 'Lorem',
-      deliveryTimeline: 'Lorem'
+      deliveryLocation: 'Faridabad Region',
+      deliveryTimeline: '4-5 Days'
     },
     {
       srNo: 24,
-      productName: 'Name 1',
+      productName: 'Chanderi Dupatta',
       grade: '3213',
       quantity: '200 Kg',
       pricePerKg: 4000,
-      deliveryLocation: 'Lorem',
-      deliveryTimeline: 'Lorem'
+      deliveryLocation: 'Ghaziabad Region',
+      deliveryTimeline: '5-6 Days'
     }
   ]);
 
@@ -210,8 +213,9 @@ const Orders: React.FC = () => {
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-2 text-xs font-medium text-gray-500">Dispatch Date</th>
                     <th className="text-left py-2 text-xs font-medium text-gray-500">Product</th>
-                    <th className="text-left py-2 text-xs font-medium text-gray-500">User Item</th>
+                    <th className="text-left py-2 text-xs font-medium text-gray-500">Customer</th>
                     <th className="text-left py-2 text-xs font-medium text-gray-500">Delivery Location</th>
+                    <th className="text-right py-2 text-xs font-medium text-gray-500">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -221,6 +225,57 @@ const Orders: React.FC = () => {
                       <td className="py-3 text-gray-900">{order.productId}</td>
                       <td className="py-3 text-gray-900">{order.userItem}</td>
                       <td className="py-3 text-gray-900">{order.deliveryLocation}</td>
+                      <td className="py-3 text-right relative">
+                        <div className="inline-block text-left">
+                          <button
+                            onClick={() => setOpenDropdownId(openDropdownId === order.id ? null : order.id)}
+                            className="p-1 hover:bg-gray-100 rounded transition-colors"
+                          >
+                            <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                          </button>
+                          {openDropdownId === order.id && (
+                            <>
+                              <div 
+                                className="fixed inset-0 z-10" 
+                                onClick={() => setOpenDropdownId(null)}
+                              />
+                              <div className="absolute right-0 mt-1 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-20">
+                                <div className="py-1">
+                                  <button
+                                    onClick={() => {
+                                      toast.success(`Order #${order.id} shipped successfully to ${order.userItem}`);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 w-full text-left"
+                                  >
+                                    Ship Order
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      toast.success(`Order #${order.id} delivered to ${order.userItem}`);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 w-full text-left"
+                                  >
+                                    Deliver Order
+                                  </button>
+                                </div>
+                                <div className="py-1">
+                                  <button
+                                    onClick={() => {
+                                      toast.error(`Order #${order.id} cancelled`);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="block px-4 py-2 text-xs text-red-650 hover:bg-red-50 w-full text-left"
+                                  >
+                                    Cancel Order
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

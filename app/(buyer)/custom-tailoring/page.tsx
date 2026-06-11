@@ -322,19 +322,19 @@ const TailoringPage = () => {
       {/* Video Modal */}
       {isVideoPlaying && (
         <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-6">
-          <div className="relative max-w-4xl w-full aspect-video bg-neutral-900 rounded-2xl overflow-hidden">
+          <div className="relative max-w-4xl w-full aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-2xl">
             <button
               onClick={() => setIsVideoPlaying(false)}
-              className="absolute top-4 right-4 text-white hover:text-zinc-300 transition-colors z-10"
+              className="absolute top-4 right-4 text-white hover:text-zinc-300 bg-black/40 hover:bg-black/60 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-10 font-bold"
             >
-              <div className="w-8 h-8 flex items-center justify-center">✕</div>
+              ✕
             </button>
-            <div className="w-full h-full flex items-center justify-center text-white">
-              <div className="text-center">
-                <Play className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg opacity-70">Video not available for now </p>
-              </div>
-            </div>
+            <video
+              src="/Custom  Tailoring.mp4"
+              controls
+              autoPlay
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       )}

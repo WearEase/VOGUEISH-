@@ -1,8 +1,8 @@
 "use client";
 // components/dashboard/Shipments.tsx
 
-import React, { useState } from 'react';
-import { Search, Plus, MapPin, Clock, User, Phone, MessageCircle, Package, Truck, CheckCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Plus, Clock, User, Phone, MessageCircle, Package, Truck, CheckCircle } from 'lucide-react';
 import { formatINRFromUSD } from '@/lib/utils';
 
 interface Shipment {
@@ -39,6 +39,22 @@ interface RouteDetail {
 const Shipments: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedShipment, setSelectedShipment] = useState<string>('#657890');
+
+  const mapUrl = useMemo(() => {
+    if (selectedShipment === "#657890") {
+      return "https://www.openstreetmap.org/export/embed.html?bbox=77.0100%2C28.4300%2C77.0800%2C28.4800&layer=mapnik&marker=28.4595%2C77.0266";
+    }
+    if (selectedShipment === "#540775") {
+      return "https://www.openstreetmap.org/export/embed.html?bbox=72.8200%2C19.0200%2C72.9000%2C19.0800&layer=mapnik&marker=19.0760%2C72.8777";
+    }
+    if (selectedShipment === "#201998") {
+      return "https://www.openstreetmap.org/export/embed.html?bbox=77.5600%2C12.9400%2C77.6200%2C12.9900&layer=mapnik&marker=12.9716%2C77.5946";
+    }
+    if (selectedShipment === "#898766") {
+      return "https://www.openstreetmap.org/export/embed.html?bbox=80.2200%2C13.0200%2C80.2800%2C13.0800&layer=mapnik&marker=13.0827%2C80.2707";
+    }
+    return "https://www.openstreetmap.org/export/embed.html?bbox=77.0100%2C28.4300%2C77.0800%2C28.4800&layer=mapnik&marker=28.4595%2C77.0266";
+  }, [selectedShipment]);
 
   const [shipments] = useState<Shipment[]>([
     {
@@ -286,25 +302,18 @@ const Shipments: React.FC = () => {
           {/* Right Column - Map and Details */}
           <div className="lg:col-span-2">
             {/* Map */}
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 mb-6">
-              <div className="h-64 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg relative overflow-hidden">
-                <div className="absolute inset-0 bg-gray-200 opacity-50"></div>
-                <div className="absolute top-4 right-4 bg-white rounded-lg p-2 shadow-sm">
-                  <MapPin className="w-5 h-5 text-gray-600" />
-                </div>
-                <div className="absolute bottom-4 left-4 bg-black text-white px-3 py-1 rounded-full text-sm">
+            <div className="bg-white dark:bg-zinc-900 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-zinc-850 mb-6">
+              <div className="h-64 rounded-lg relative overflow-hidden bg-gray-100 dark:bg-zinc-800">
+                <iframe
+                  title="Shipment Live Tracking"
+                  width="100%"
+                  height="100%"
+                  src={mapUrl}
+                  className="border-none"
+                />
+                <div className="absolute bottom-4 left-4 bg-black/80 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm pointer-events-none">
                   Live Tracking
                 </div>
-                {/* Simulated route line */}
-                <svg className="absolute inset-0 w-full h-full">
-                  <path
-                    d="M 50 200 Q 150 100 250 150 T 350 120"
-                    stroke="black"
-                    strokeWidth="3"
-                    strokeDasharray="10,5"
-                    fill="none"
-                  />
-                </svg>
               </div>
             </div>
 

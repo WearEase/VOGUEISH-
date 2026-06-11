@@ -50,3 +50,6 @@ next-env.d.ts
 GEMINI.md
 gemini.md
 scripts/scrapeLashkaraa.js
+
+#public data
+public/VOGUEISH NGOs Sheet - Sheet1.csv

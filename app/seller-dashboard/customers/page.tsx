@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { Search, Filter, MoreHorizontal} from 'lucide-react';
 import { formatINRFromUSD } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface Customer {
   id: string;
@@ -18,18 +19,19 @@ interface Customer {
 }
 
 const Customers: React.FC = () => {
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [customers] = useState<Customer[]>([
     {
       id: '1',
-      name: 'Name',
+      name: 'Aarav Sharma',
       products: ['Nike sportswear'],
-      billingDate: '',
+      billingDate: 'MAR 20, 2024',
       amount: 11000,
       status: 'active'
     },
     {
       id: '2',
-      name: 'Name',
+      name: 'Priya Patel',
       products: ['Sherlocks Black'],
       billingDate: 'MAR 21, 2024',
       amount: 21000,
@@ -37,7 +39,7 @@ const Customers: React.FC = () => {
     },
     {
       id: '3',
-      name: 'Name',
+      name: 'Rohan Mehta',
       products: ['Dorothy Red'],
       billingDate: 'MAR 21, 2024',
       amount: 21000,
@@ -45,24 +47,24 @@ const Customers: React.FC = () => {
     },
     {
       id: '4',
-      name: 'Name',
-      products: [''],
+      name: 'Ananya Iyer',
+      products: ['B For Bottoms Slim Jeans'],
       billingDate: 'MAR 22, 2024',
       amount: 21000,
       status: 'active'
     },
     {
       id: '5',
-      name: 'Name',
-      products: [''],
+      name: 'Aditya Verma',
+      products: ['Premium High-Rise Leggings'],
       billingDate: 'MAR 22, 2024',
       amount: 21000,
       status: 'active'
     },
     {
       id: '6',
-      name: 'Name',
-      products: [''],
+      name: 'Meera Sen',
+      products: ['Linen Wide-Leg Trousers'],
       billingDate: 'MAR 23, 2024',
       amount: 21000,
       status: 'active'
@@ -183,14 +185,58 @@ const Customers: React.FC = () => {
                         {formatINRFromUSD(customer.amount, { seed: customer.id })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="relative inline-block">
+                    <td className="px-6 py-4 whitespace-nowrap text-right relative">
+                      <div className="relative inline-block text-left">
                         <button
-                          onClick={() => handleCustomerAction(customer.id, 'view')}
+                          onClick={() => setOpenDropdownId(openDropdownId === customer.id ? null : customer.id)}
                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                         >
                           <MoreHorizontal className="w-4 h-4 text-gray-500" />
                         </button>
+                        {openDropdownId === customer.id && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-10" 
+                              onClick={() => setOpenDropdownId(null)}
+                            />
+                            <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-20">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => {
+                                    handleCustomerAction(customer.id, 'view');
+                                    toast.success(`Viewing profile for ${customer.name}`);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full text-left"
+                                >
+                                  View Profile
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleCustomerAction(customer.id, 'invoice');
+                                    toast.success(`Invoice sent to ${customer.name}`);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full text-left"
+                                >
+                                  Send Invoice
+                                </button>
+                              </div>
+                              <div className="py-1">
+                                <button
+                                  onClick={() => {
+                                    handleCustomerAction(customer.id, 'suspend');
+                                    toast.error(`Suspended account for ${customer.name}`);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="group flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-900 w-full text-left"
+                                >
+                                  Suspend Account
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

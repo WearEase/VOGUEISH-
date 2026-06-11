@@ -87,8 +87,11 @@ const Navbar = () => {
             Custom Tailoring
           </Link>
           <Link
-            href="/#home-trials"
-            className="hover:text-black"
+            href="/home-trials"
+            className={clsx(
+              "hover:text-black",
+              pathname === "/home-trials" ? "text-black" : ""
+            )}
           >
             Home Trials
           </Link>
@@ -100,6 +103,12 @@ const Navbar = () => {
             )}
           >
             Donation
+          </Link>
+          <Link
+            href="/my-account#wishlist"
+            className="hover:text-black"
+          >
+            Wishlist
           </Link>
         </div>
 
@@ -119,8 +128,9 @@ const Navbar = () => {
               <Link href="/shop" className="block" onClick={() => setIsOpen(false)}>Shop</Link>
               <Link href="/ai-bot" className="block" onClick={() => setIsOpen(false)}>AI Bot</Link>
               <Link href="/custom-tailoring" className="block" onClick={() => setIsOpen(false)}>Custom Tailoring</Link>
-              <Link href="/#home-trials" className="block" onClick={() => setIsOpen(false)}>Home Trials</Link>
+              <Link href="/home-trials" className="block" onClick={() => setIsOpen(false)}>Home Trials</Link>
               <Link href="/donation" className="block" onClick={() => setIsOpen(false)}>Donation</Link>
+              <Link href="/my-account#wishlist" className="block" onClick={() => setIsOpen(false)}>Wishlist</Link>
             </nav>
           </div>
         )

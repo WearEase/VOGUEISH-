@@ -32,25 +32,51 @@ export default function AIRecommendationSection() {
         </motion.p>
       </div>
 
-      {/* Central Chat Glass Panel */}
-      <motion.div
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.2 }}
-        className="relative z-10 mt-16 mx-auto w-full max-w-xl bg-white/60 backdrop-blur-lg rounded-3xl shadow-lg p-6 border border-neutral-200"
-      >
-        <div className="flex flex-col gap-4">
-          <div className="bg-white rounded-xl p-4 text-sm shadow-sm max-w-[80%] self-start">
-            👗 Hello! I&apos;m your fashion assistant. Need help with an outfit?
+      {/* Two Column Grid */}
+      <div className="relative z-10 max-w-6xl mx-auto mt-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        {/* Left Column: Mock Chat */}
+        <motion.div
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1 }}
+          className="bg-white/60 backdrop-blur-lg rounded-3xl shadow-lg p-6 border border-neutral-200 w-full"
+        >
+          <div className="flex flex-col gap-4">
+            <div className="bg-white rounded-xl p-4 text-sm shadow-sm max-w-[80%] self-start text-left">
+              👗 Hello! I&apos;m your fashion assistant. Need help with an outfit?
+            </div>
+            <div className="bg-neutral-100 rounded-xl p-4 text-sm shadow-sm max-w-[80%] self-end text-left">
+              Yes! I’m looking for something classy for a dinner date.
+            </div>
+            <div className="bg-white rounded-xl p-4 text-sm shadow-sm max-w-[80%] self-start text-left">
+              Got it! Here are some recommendations I think you’ll love.
+            </div>
           </div>
-          <div className="bg-neutral-100 rounded-xl p-4 text-sm shadow-sm max-w-[80%] self-end">
-            Yes! I’m looking for something classy for a dinner date.
+        </motion.div>
+
+        {/* Right Column: How it Works Video */}
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1 }}
+          className="bg-white/60 backdrop-blur-lg rounded-3xl shadow-lg p-6 border border-neutral-200 w-full flex flex-col gap-4"
+        >
+          <h3 className={`text-xl font-semibold text-left ${cormorant.className}`}>
+            See Your AI Stylist in Action
+          </h3>
+          <div className="relative aspect-video rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-200 shadow-inner group">
+            <video
+              src="/Ai chatbot.mp4"
+              controls
+              playsInline
+              className="w-full h-full object-cover"
+            />
           </div>
-          <div className="bg-white rounded-xl p-4 text-sm shadow-sm max-w-[80%] self-start">
-            Got it! Here are some recommendations I think you’ll love.
-          </div>
-        </div>
-      </motion.div>
+          <p className="text-xs text-neutral-500 leading-relaxed text-left">
+            Our intelligent recommendation engine analyzes your style preferences, body profile, and ongoing global fashion trends to curate the perfect luxury wardrobe instantly.
+          </p>
+        </motion.div>
+      </div>
 
       {/* Floating Fashion Suggestions (blurred) */}
       <div className="absolute inset-0 pointer-events-none">

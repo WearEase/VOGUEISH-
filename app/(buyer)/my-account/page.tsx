@@ -67,6 +67,7 @@ export default function MyAccountPage() {
   // States for Home Trials & Donations
   const [homeTrials, setHomeTrials] = useState<HomeTrial[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
+  const [wishlist, setWishlist] = useState<{ id: string; name: string; brand: string; price: number; image: string }[]>([]);
 
   // OTP Verification state
   const [verifyingTrialId, setVerifyingTrialId] = useState<string | null>(null);
@@ -103,6 +104,18 @@ export default function MyAccountPage() {
       }
     } else {
       initDonations();
+    }
+
+    // Load wishlist from localStorage or set initial mocks
+    const storedWishlist = localStorage.getItem("profileWishlist");
+    if (storedWishlist) {
+      try {
+        setWishlist(JSON.parse(storedWishlist));
+      } catch {
+        initWishlist();
+      }
+    } else {
+      initWishlist();
     }
   }, []);
 
@@ -150,6 +163,23 @@ export default function MyAccountPage() {
     localStorage.setItem("profileDonations", JSON.stringify(initialDonations));
   };
 
+  const initWishlist = () => {
+    const initialWishlist = [
+      { id: "w1", name: "Classic Cashmere Blazer", brand: "Loro Piana", price: 18499, image: "/home-trial.jpg" },
+      { id: "w2", name: "Premium Wool Trousers", brand: "Zegna", price: 9299, image: "/home-trial1.jpg" },
+      { id: "w3", name: "Running Trainer 2.0", brand: "Nike", price: 6499, image: "/delivery.jpg" }
+    ];
+    setWishlist(initialWishlist);
+    localStorage.setItem("profileWishlist", JSON.stringify(initialWishlist));
+  };
+
+  const handleRemoveWishlist = (id: string) => {
+    const updated = wishlist.filter(item => item.id !== id);
+    setWishlist(updated);
+    localStorage.setItem("profileWishlist", JSON.stringify(updated));
+    toast.success("Item removed from your wishlist.");
+  };
+ 
   const updateHomeTrialsLocal = (newTrials: HomeTrial[]) => {
     setHomeTrials(newTrials);
     localStorage.setItem("profileHomeTrials", JSON.stringify(newTrials));
@@ -378,7 +408,8 @@ export default function MyAccountPage() {
                       { label: "Profile status", value: "Verified Client" },
                       { label: "Email status", value: "Confirmed" },
                       { label: "Total Home trials", value: `${homeTrials.length} trials` },
-                      { label: "Total Donations", value: `${donations.length} pickups` }
+                      { label: "Total Donations", value: `${donations.length} pickups` },
+                      { label: "Wishlist Items", value: `${wishlist.length} items` }
                     ].map((row) => (
                       <div key={row.label} className="flex items-center justify-between rounded-xl border border-gray-100 p-3 text-sm">
                         <p className="text-gray-700">{row.label}</p>
@@ -692,6 +723,61 @@ export default function MyAccountPage() {
                       </div>
                     </div>
                   ))
+                )}
+              </div>
+            </section>
+
+            {/* SECTION 4: MY WISHLIST */}
+            <section id="wishlist" className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="p-6 sm:p-8 border-b border-gray-100">
+                <h2 className="text-2xl font-serif text-gray-900">My Wishlist</h2>
+                <p className="mt-1 text-gray-500 text-xs">
+                  Your curated collection of premium products you have wishlisted.
+                </p>
+              </div>
+
+              <div className="p-6 sm:p-8">
+                {wishlist.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500 text-sm">
+                    Your wishlist is empty. Start exploring the store to add items.
+                  </div>
+                ) : (
+                  <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {wishlist.map((item) => (
+                      <div key={item.id} className="group relative rounded-2xl border border-gray-200 overflow-hidden bg-white hover:shadow-md transition duration-300 flex flex-col">
+                        <div className="relative aspect-[4/3] bg-zinc-100 overflow-hidden">
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                        <div className="p-4 flex-1 flex flex-col justify-between">
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">{item.brand}</p>
+                            <h3 className="font-semibold text-sm text-gray-900 mt-1 leading-snug">{item.name}</h3>
+                            <p className="text-sm font-semibold text-zinc-900 mt-2">₹{item.price.toLocaleString()}</p>
+                          </div>
+                          
+                          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                            <Link
+                              href="/shop"
+                              className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-black text-white text-xs hover:bg-zinc-800 transition font-medium"
+                            >
+                              Shop Now
+                            </Link>
+                            <button
+                              onClick={() => handleRemoveWishlist(item.id)}
+                              className="text-xs text-red-500 hover:text-red-700 font-medium transition"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </section>
