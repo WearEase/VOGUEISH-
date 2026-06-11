@@ -85,17 +85,25 @@ export default function ProductCard({
 
   if (viewMode === 'list') {
     return (
-      <div className="flex gap-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-300 p-6">
+      <div className="group flex gap-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-300 p-6">
         <Link href={`/shop/${product.slug}`} className="flex-shrink-0">
           <div className="relative w-32 h-40 rounded-lg overflow-hidden">
             <Image
               src={product.mainImage}
               alt={product.name}
               fill
-              className="object-cover hover:scale-105 transition-transform duration-300"
+              className={`object-cover transition-opacity duration-500 ${product.extraImage1 ? 'group-hover:opacity-0' : 'group-hover:scale-105 transition-transform'}`}
             />
+            {product.extraImage1 && (
+              <Image
+                src={product.extraImage1}
+                alt={`${product.name} back`}
+                fill
+                className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 absolute inset-0"
+              />
+            )}
             {discountPercentage > 0 && (
-              <div className="absolute top-2 left-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+              <div className="absolute top-2 left-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full z-10">
                 -{discountPercentage}%
               </div>
             )}
@@ -168,10 +176,20 @@ export default function ProductCard({
             src={product.mainImage}
             alt={product.name}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`object-cover transition-opacity duration-500 ${product.extraImage1 ? 'group-hover:opacity-0' : 'group-hover:scale-105 transition-transform'}`}
+            sizes="(max-width: 768px) 100vw, 33vw"
           />
+          {product.extraImage1 && (
+            <Image
+              src={product.extraImage1}
+              alt={`${product.name} back`}
+              fill
+              className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 absolute inset-0"
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+          )}
           {discountPercentage > 0 && (
-            <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-full shadow-lg">
+            <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2.5 py-1.5 rounded-full shadow-lg z-10">
               -{discountPercentage}%
             </div>
           )}

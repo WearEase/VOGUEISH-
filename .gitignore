@@ -49,3 +49,4 @@ next-env.d.ts
 .github
 GEMINI.md
 gemini.md
+scripts/scrapeLashkaraa.js

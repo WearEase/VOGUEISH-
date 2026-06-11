@@ -14,11 +14,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import { ShieldCheck, Sparkles, Truck, UserRound } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 const buyerHighlights = [
   {
@@ -42,6 +43,21 @@ const BuyerSignIn = () => {
   const { buyerSignIn, buyerGoogleSignIn, sendVerificationLink, sendPasswordResetLink, isLoading, error, clearError } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const verified = searchParams.get("verified");
+    const errorParam = searchParams.get("error");
+    const messageParam = searchParams.get("message");
+
+    if (verified === "true") {
+      setAuthMessage("Email verified successfully! You can now sign in.");
+      setAuthError(null);
+    } else if (errorParam) {
+      setAuthError(messageParam || "Email verification failed.");
+      setAuthMessage(null);
+    }
+  }, [searchParams]);
 
   const {
     register,

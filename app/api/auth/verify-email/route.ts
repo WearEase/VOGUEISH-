@@ -23,7 +23,7 @@ const verifyUserEmail = async (email: string, token: string) => {
   user.emailVerificationExpires = undefined;
   await user.save();
 
-  return { success: true, message: "Email verified successfully" };
+  return { success: true, message: "Email verified successfully", role: user.role };
 };
 
 export async function POST(req: Request) {
@@ -53,17 +53,26 @@ export async function GET(req: Request) {
     const token = searchParams.get("token");
 
     if (!email || !token) {
-      return NextResponse.json({ error: "Email and token are required" }, { status: 400 });
+      return NextResponse.redirect(
+        new URL("/buyer-sign-in?error=verification_failed&message=Email and token are required", req.url)
+      );
     }
 
     const result = await verifyUserEmail(email, token);
     if (!result.success) {
-      return NextResponse.json({ error: result.message }, { status: 400 });
+      return NextResponse.redirect(
+        new URL(`/buyer-sign-in?error=verification_failed&message=${encodeURIComponent(result.message)}`, req.url)
+      );
     }
 
-    return NextResponse.json({ success: true, message: result.message });
+    const redirectPath = result.role === "seller" ? "/seller-sign-in" : "/buyer-sign-in";
+    return NextResponse.redirect(
+      new URL(`${redirectPath}?verified=true`, req.url)
+    );
   } catch (error) {
     console.error("Error verifying email:", error);
-    return NextResponse.json({ error: "Failed to verify email" }, { status: 500 });
+    return NextResponse.redirect(
+      new URL("/buyer-sign-in?error=verification_failed&message=Failed to verify email due to internal server error", req.url)
+    );
   }
 }

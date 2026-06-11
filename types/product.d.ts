@@ -12,6 +12,11 @@ export interface Product {
     extraImage4?: string;
     sizesAvailable: string[];
     description: string;
+    popularityRank?: number;
+    rating?: number;
+    arrivalDate?: string;
+    gender?: string;
+    collectionType?: string;
   }
   
   export type TabType = 'description' | 'details' | 'returns';

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import AuthForm from "@/components/auth/AuthForm";
 import { FormType } from "@/types/authTypes";
+import { Suspense } from "react";
 
 const AuthPage = () => {
   const params = useParams();
@@ -38,7 +39,9 @@ const AuthPage = () => {
     // Render just the customized seller sign-up version
     return (
       <>
-        <AuthForm type="seller-sign-up" />
+        <Suspense fallback={<div className="h-12 flex items-center justify-center">Loading...</div>}>
+          <AuthForm type="seller-sign-up" />
+        </Suspense>
         <div className="hidden md:block">
           <Footer />
         </div>
@@ -58,7 +61,9 @@ const AuthPage = () => {
             <h2 className="text-2xl font-medium text-gray-900 text-center lg:text-left">{subtitle}</h2>
             <h3 className="text-3xl font-extrabold text-center lg:text-left">{title}</h3>
 
-            <AuthForm type={type} />
+            <Suspense fallback={<div className="h-12 flex items-center justify-center">Loading...</div>}>
+              <AuthForm type={type} />
+            </Suspense>
 
             <p className="text-center text-sm text-gray-600 mt-4">
               {alternateText}

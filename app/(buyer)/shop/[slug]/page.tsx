@@ -1,12 +1,11 @@
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
-import { products } from '@/data/products';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Product, TabType } from '@/types/product';
 import { Cormorant_Garamond } from 'next/font/google';
-import { ShoppingCart, Heart, Star, Truck, Shield, RotateCcw, Home } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Truck, Shield, RotateCcw, Home, X, Ruler } from 'lucide-react';
 import { useHomeTrial } from '@/context/HomeTrialContext';
 import { toast } from 'sonner';
 
@@ -42,19 +41,10 @@ export default function ProductPage() {
   const { slug } = useParams();
   const router = useRouter();
   const { addToHomeTrial, trialItems } = useHomeTrial();
-  const product: Product | undefined = products.find((p) => p.slug === slug);
 
-  const images = product
-    ? [
-      product.mainImage,
-      product.extraImage1,
-      product.extraImage2,
-      product.extraImage3,
-      product.extraImage4,
-    ].filter(Boolean) as string[]
-    : [];
-
-  const [selectedImg, setSelectedImg] = useState(images[0]);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedImg, setSelectedImg] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('description');
   const [quantity, setQuantity] = useState(1);
@@ -64,8 +54,48 @@ export default function ProductPage() {
   const [showAddedToCart, setShowAddedToCart] = useState(false);
   const [didHydrateStorage, setDidHydrateStorage] = useState(false);
 
+  // Size Guide modal state
+  const [showSizeGuideModal, setShowSizeGuideModal] = useState(false);
+  const [activeGuideTab, setActiveGuideTab] = useState<'chart' | 'measure' | 'video'>('chart');
+
+  // Load product dynamically from API
+  useEffect(() => {
+    async function loadProduct() {
+      try {
+        const res = await fetch(`/api/products/${slug}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProduct(data);
+        }
+      } catch (err) {
+        console.error("Failed to load product details", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (slug) loadProduct();
+  }, [slug]);
+
+  const images = useMemo(() => product
+    ? [
+      product.mainImage,
+      product.extraImage1,
+      product.extraImage2,
+      product.extraImage3,
+      product.extraImage4,
+    ].filter(Boolean) as string[]
+    : [], [product]);
+
+  // Set selected main image when product loads
+  useEffect(() => {
+    if (images.length > 0) {
+      setSelectedImg(images[0]);
+    }
+  }, [images]);
+
   // Load cart and wishlist from localStorage on component mount
   useEffect(() => {
+    if (!product) return;
     setDidHydrateStorage(false);
     const savedCart = localStorage.getItem('ecommerce-cart');
     const savedWishlist = localStorage.getItem('ecommerce-wishlist');
@@ -89,9 +119,8 @@ export default function ProductPage() {
       }
     }
 
-    // Prevent the initial "save" effects from overwriting storage with empty arrays.
     setDidHydrateStorage(true);
-  }, [slug]);
+  }, [slug, product]);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -164,7 +193,6 @@ export default function ProductPage() {
 
     addToHomeTrial(product, selectedSize);
 
-    // Redirect to service fees page as requested
     toast.success('Added to Home Trial Bag! Redirecting...');
     setTimeout(() => {
       router.push('/service-fees');
@@ -175,12 +203,10 @@ export default function ProductPage() {
     if (!product) return;
 
     if (isInWishlist) {
-      // Remove from wishlist
       const updatedWishlist = wishlist.filter(item => item.slug !== product.slug);
       setWishlist(updatedWishlist);
       setIsInWishlist(false);
     } else {
-      // Add to wishlist
       const wishlistItem: WishlistItem = {
         id: product.slug,
         name: product.name,
@@ -198,13 +224,26 @@ export default function ProductPage() {
     return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
-  if (!product) {
+  if (loading) {
     return (
-      <div className="p-10 text-center text-gray-500">
-        Product not found.
+      <div className="min-h-screen bg-[#f9f8f6] flex items-center justify-center">
+        <div className="text-gray-500 font-medium animate-pulse text-lg">Loading details...</div>
       </div>
     );
   }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-[#f9f8f6] flex items-center justify-center">
+        <div className="text-gray-500 font-medium text-lg">Product not found.</div>
+      </div>
+    );
+  }
+
+  const discountPercent = Math.round(
+    ((Number(String(product.realPrice).replace(/[^\d]/g, '')) - Number(String(product.discountedPrice).replace(/[^\d]/g, ''))) /
+      Number(String(product.realPrice).replace(/[^\d]/g, ''))) * 100
+  );
 
   return (
     <div className="min-h-screen bg-[#f9f8f6] p-6 md:p-12 text-neutral-800">
@@ -225,8 +264,7 @@ export default function ProductPage() {
               <button
                 key={i}
                 onClick={() => setSelectedImg(img)}
-                className={`overflow-hidden border rounded-lg w-16 h-16 ${selectedImg === img ? 'ring-2 ring-neutral-800' : ''
-                  }`}
+                className={`overflow-hidden border rounded-lg w-16 h-16 ${selectedImg === img ? 'ring-2 ring-neutral-800' : ''}`}
               >
                 <Image
                   src={img}
@@ -251,10 +289,7 @@ export default function ProductPage() {
             {/* Wishlist Button */}
             <button
               onClick={toggleWishlist}
-              className={`absolute top-4 right-4 p-2 rounded-full shadow-lg transition-all ${isInWishlist
-                ? 'bg-red-500 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
+              className={`absolute top-4 right-4 p-2 rounded-full shadow-lg transition-all ${isInWishlist ? 'bg-red-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
             >
               <Heart className={`w-5 h-5 ${isInWishlist ? 'fill-current' : ''}`} />
             </button>
@@ -282,18 +317,33 @@ export default function ProductPage() {
             </div>
 
             <div className="flex items-center gap-3 text-xl mt-3">
-              {product.discountedPrice.toLocaleString()}
+              ₹{Number(product.discountedPrice).toLocaleString()}
               <span className="line-through text-gray-400 text-base">
-                {product.realPrice.toLocaleString()}
+                ₹{Number(product.realPrice).toLocaleString()}
               </span>
-              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                {Math.round(((parseInt(String(product.realPrice).replace(/[^\d]/g, '')) - parseInt(String(product.discountedPrice).replace(/[^\d]/g, ''))) / parseInt(String(product.realPrice).replace(/[^\d]/g, ''))) * 100)}% OFF
-              </span>
+              {discountPercent > 0 && (
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                  {discountPercent}% OFF
+                </span>
+              )}
             </div>
 
             {/* Sizes */}
             <div className="mt-6">
-              <h4 className="text-sm font-semibold mb-2">Select Size</h4>
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="text-sm font-semibold text-neutral-800">Select Size</h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveGuideTab('chart');
+                    setShowSizeGuideModal(true);
+                  }}
+                  className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-semibold underline cursor-pointer"
+                >
+                  <Ruler className="w-3.5 h-3.5" />
+                  Size Guide & Measure
+                </button>
+              </div>
               <div className="flex gap-3 flex-wrap">
                 {product.sizesAvailable.map((size) => (
                   <button
@@ -301,8 +351,7 @@ export default function ProductPage() {
                     onClick={() => setSelectedSize(size)}
                     className={`min-w-[48px] h-12 px-4 rounded-lg border text-sm font-medium transition-all duration-200 ${selectedSize === size
                       ? 'bg-neutral-900 text-white border-neutral-900 shadow-md transform scale-105'
-                      : 'bg-white text-neutral-700 border-gray-200 hover:border-neutral-400 hover:bg-gray-50'
-                      }`}
+                      : 'bg-white text-neutral-700 border-gray-200 hover:border-neutral-400 hover:bg-gray-50'}`}
                   >
                     {size}
                   </button>
@@ -367,10 +416,7 @@ export default function ProductPage() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`pb-3 text-sm font-medium capitalize transition-all relative ${activeTab === tab
-                      ? 'text-black'
-                      : 'text-gray-400 hover:text-gray-600'
-                      }`}
+                    className={`pb-3 text-sm font-medium capitalize transition-all relative ${activeTab === tab ? 'text-black' : 'text-gray-400 hover:text-gray-600'}`}
                   >
                     {tab}
                     {activeTab === tab && (
@@ -383,10 +429,10 @@ export default function ProductPage() {
                 {activeTab === 'description' && <p>{product.description}</p>}
                 {activeTab === 'details' && (
                   <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    <p><span className="font-medium text-gray-900">Material:</span> Premium Cotton Blend</p>
-                    <p><span className="font-medium text-gray-900">Care:</span> Machine wash cold</p>
-                    <p><span className="font-medium text-gray-900">Fit:</span> Regular fit</p>
-                    <p><span className="font-medium text-gray-900">Origin:</span> Made in India</p>
+                    <p><span className="font-medium text-gray-900">Brand:</span> {product.brand}</p>
+                    <p><span className="font-medium text-gray-900">Category:</span> {product.collectionType || 'General'}</p>
+                    <p><span className="font-medium text-gray-900">Care:</span> Dry Clean Only</p>
+                    <p><span className="font-medium text-gray-900">Gender:</span> {product.gender}</p>
                   </div>
                 )}
                 {activeTab === 'returns' && (
@@ -423,6 +469,262 @@ export default function ProductPage() {
           </div>
         </div>
       </div>
+
+      {/* Size Guide Modal Overlay */}
+      {showSizeGuideModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative p-6 md:p-8 border border-neutral-100">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowSizeGuideModal(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-neutral-100 rounded-full text-neutral-500 transition-all cursor-pointer"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Modal Header & Tabs */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 pb-4 mb-6 gap-4">
+              <h2 className={`text-2xl font-semibold text-neutral-900 ${cormorant.className}`}>
+                {product.gender === 'Men' ? "Men's Size Guide" : "Lehenga Size Guide"}
+              </h2>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setActiveGuideTab('chart')}
+                  className={`pb-2 text-sm font-semibold transition-all relative ${activeGuideTab === 'chart' ? 'text-black font-bold' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Size guide
+                  {activeGuideTab === 'chart' && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-full" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveGuideTab('measure')}
+                  className={`pb-2 text-sm font-semibold transition-all relative ${activeGuideTab === 'measure' ? 'text-black font-bold' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  How to Measure
+                  {activeGuideTab === 'measure' && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-full" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveGuideTab('video')}
+                  className={`pb-2 text-sm font-semibold transition-all relative ${activeGuideTab === 'video' ? 'text-black font-bold' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Measurement video
+                  {activeGuideTab === 'video' && (
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-full" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Tab 1: Size Chart Table */}
+            {activeGuideTab === 'chart' && (
+              <div>
+                <h3 className={`text-lg font-bold text-center tracking-wider text-neutral-700 uppercase mb-4 ${cormorant.className}`}>
+                  {product.gender === 'Men' ? "Sherwani & Kurta Measurement Chart" : "Lehenga Measurement Chart"}
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-center border-collapse text-sm text-neutral-700">
+                    <thead>
+                      <tr className="bg-neutral-50 text-neutral-900 border-b border-neutral-200">
+                        <th className="py-3 px-4 text-left font-semibold">Measurement</th>
+                        <th className="py-3 px-4 font-semibold">XXS</th>
+                        <th className="py-3 px-4 font-semibold">XS</th>
+                        <th className="py-3 px-4 font-semibold">S</th>
+                        <th className="py-3 px-4 font-semibold">M</th>
+                        <th className="py-3 px-4 font-semibold">L</th>
+                        <th className="py-3 px-4 font-semibold">XL</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-100">
+                      {product.gender === 'Men' ? (
+                        <>
+                          <tr>
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Chest (Inches)</td>
+                            <td className="py-3 px-4">34</td>
+                            <td className="py-3 px-4">36</td>
+                            <td className="py-3 px-4">38</td>
+                            <td className="py-3 px-4">40</td>
+                            <td className="py-3 px-4">42</td>
+                            <td className="py-3 px-4">44</td>
+                          </tr>
+                          <tr className="bg-neutral-50/50">
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Shoulder (Inches)</td>
+                            <td className="py-3 px-4">16.5</td>
+                            <td className="py-3 px-4">17.0</td>
+                            <td className="py-3 px-4">17.5</td>
+                            <td className="py-3 px-4">18.0</td>
+                            <td className="py-3 px-4">18.5</td>
+                            <td className="py-3 px-4">19.0</td>
+                          </tr>
+                          <tr>
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Sleeve Length (Inches)</td>
+                            <td className="py-3 px-4">24.0</td>
+                            <td className="py-3 px-4">24.5</td>
+                            <td className="py-3 px-4">25.0</td>
+                            <td className="py-3 px-4">25.5</td>
+                            <td className="py-3 px-4">26.0</td>
+                            <td className="py-3 px-4">26.5</td>
+                          </tr>
+                          <tr className="bg-neutral-50/50">
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Kurta Length (Inches)</td>
+                            <td className="py-3 px-4">39.5</td>
+                            <td className="py-3 px-4">40.0</td>
+                            <td className="py-3 px-4">40.5</td>
+                            <td className="py-3 px-4">41.0</td>
+                            <td className="py-3 px-4">41.5</td>
+                            <td className="py-3 px-4">42.0</td>
+                          </tr>
+                          <tr>
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Neck (Inches)</td>
+                            <td className="py-3 px-4">14.5</td>
+                            <td className="py-3 px-4">15.0</td>
+                            <td className="py-3 px-4">15.5</td>
+                            <td className="py-3 px-4">16.0</td>
+                            <td className="py-3 px-4">16.5</td>
+                            <td className="py-3 px-4">17.0</td>
+                          </tr>
+                        </>
+                      ) : (
+                        <>
+                          <tr>
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Bust (Inches)</td>
+                            <td className="py-3 px-4">32</td>
+                            <td className="py-3 px-4">34</td>
+                            <td className="py-3 px-4">36</td>
+                            <td className="py-3 px-4">38</td>
+                            <td className="py-3 px-4">40</td>
+                            <td className="py-3 px-4">42</td>
+                          </tr>
+                          <tr className="bg-neutral-50/50">
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Blouse Length (Lehenga)</td>
+                            <td className="py-3 px-4">12.5</td>
+                            <td className="py-3 px-4">12.5</td>
+                            <td className="py-3 px-4">13</td>
+                            <td className="py-3 px-4">13</td>
+                            <td className="py-3 px-4">14</td>
+                            <td className="py-3 px-4">14</td>
+                          </tr>
+                          <tr>
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Bottom Length (Lehenga)</td>
+                            <td className="py-3 px-4">42</td>
+                            <td className="py-3 px-4">42</td>
+                            <td className="py-3 px-4">42</td>
+                            <td className="py-3 px-4">42</td>
+                            <td className="py-3 px-4">42</td>
+                            <td className="py-3 px-4">42</td>
+                          </tr>
+                          <tr className="bg-neutral-50/50">
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Armhole Sleeve</td>
+                            <td className="py-3 px-4">15</td>
+                            <td className="py-3 px-4">16</td>
+                            <td className="py-3 px-4">16</td>
+                            <td className="py-3 px-4">17</td>
+                            <td className="py-3 px-4">17</td>
+                            <td className="py-3 px-4">18</td>
+                          </tr>
+                          <tr>
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Armhole Sleeveless</td>
+                            <td className="py-3 px-4">16</td>
+                            <td className="py-3 px-4">17</td>
+                            <td className="py-3 px-4">17</td>
+                            <td className="py-3 px-4">18</td>
+                            <td className="py-3 px-4">18</td>
+                            <td className="py-3 px-4">19</td>
+                          </tr>
+                          <tr className="bg-neutral-50/50">
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Around Above Waist</td>
+                            <td className="py-3 px-4">26</td>
+                            <td className="py-3 px-4">28</td>
+                            <td className="py-3 px-4">30</td>
+                            <td className="py-3 px-4">32</td>
+                            <td className="py-3 px-4">34</td>
+                            <td className="py-3 px-4">36</td>
+                          </tr>
+                          <tr>
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Around Waist</td>
+                            <td className="py-3 px-4">28</td>
+                            <td className="py-3 px-4">30</td>
+                            <td className="py-3 px-4">32</td>
+                            <td className="py-3 px-4">34</td>
+                            <td className="py-3 px-4">36</td>
+                            <td className="py-3 px-4">38</td>
+                          </tr>
+                          <tr className="bg-neutral-50/50">
+                            <td className="py-3 px-4 text-left font-medium text-neutral-900">Around Hips</td>
+                            <td className="py-3 px-4">36</td>
+                            <td className="py-3 px-4">38</td>
+                            <td className="py-3 px-4">40</td>
+                            <td className="py-3 px-4">42</td>
+                            <td className="py-3 px-4">44</td>
+                            <td className="py-3 px-4">46</td>
+                          </tr>
+                        </>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-neutral-500 mt-4 italic">
+                  Note: All measurements are in inches. The lengths may vary slightly based on style and neckline design.
+                </p>
+              </div>
+            )}
+
+            {/* Tab 2: How to Measure */}
+            {activeGuideTab === 'measure' && (
+              <div className="grid md:grid-cols-2 gap-6 text-sm text-neutral-700">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-base text-neutral-900">Sizing Guidelines</h3>
+                  <div>
+                    <h4 className="font-semibold text-neutral-800">1. Bust / Chest</h4>
+                    <p className="text-neutral-600 mt-0.5">Measure around the fullest part of the chest/bust, keeping the measuring tape horizontal and comfortably snug.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-neutral-800">2. Waist</h4>
+                    <p className="text-neutral-600 mt-0.5">Measure around your natural waistline. This is the narrowest point of your torso (typically just above your navel).</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-neutral-800">3. Hips</h4>
+                    <p className="text-neutral-600 mt-0.5">Stand with feet together and measure around the fullest part of your hips (approx. 7-8 inches below your natural waistline).</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-neutral-800">4. Length</h4>
+                    <p className="text-neutral-600 mt-0.5">For tops, measure from the high point of the shoulder down to the hem. For bottoms, measure from natural waist down to the floor/ankles.</p>
+                  </div>
+                </div>
+                <div className="bg-neutral-50 p-6 rounded-2xl flex flex-col justify-center border border-neutral-100">
+                  <h4 className="font-bold text-neutral-900 mb-2">Measuring Tips:</h4>
+                  <ul className="list-disc pl-4 space-y-2 text-neutral-600">
+                    <li>Use a flexible, fabric measuring tape for accuracy.</li>
+                    <li>Measure while wearing form-fitting clothing or undergarments.</li>
+                    <li>Keep the tape flat against the body but not pulled too tight.</li>
+                    <li>If you fall between sizes, we recommend selecting the larger size for a more comfortable fit (it can easily be altered down).</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 3: Measurement Video */}
+            {activeGuideTab === 'video' && (
+              <div className="flex flex-col items-center">
+                <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-black border border-neutral-200">
+                  <iframe
+                    src="https://www.youtube.com/embed/J7dEwG7Qe5M"
+                    title="How to Measure - Size Guide video"
+                    className="absolute inset-0 w-full h-full border-none"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                <p className="text-xs text-neutral-500 mt-3 italic text-center">
+                  This video walkthrough demonstrates the standard methods for taking body measurements for luxury ethnic clothing.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

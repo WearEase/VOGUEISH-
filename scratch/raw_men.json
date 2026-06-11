@@ -1,0 +1,123 @@
+{
+  "success": true,
+  "data": {
+    "metadata": {
+      "title": "\n      Men\n    ",
+      "twitter:description": "",
+      "target_origin": "https://www.lashkaraa.in",
+      "theme-color": "#fff",
+      "language": "en",
+      "ogTitle": "Men",
+      "twitter:title": "Men",
+      "og:type": "website",
+      "og:title": "Men",
+      "og:url": "https://www.lashkaraa.in/collections/men",
+      "og:site_name": "Lashkaraa India",
+      "message_payload": "{\"type\":\"completed\"}",
+      "ogSiteName": "Lashkaraa India",
+      "viewport": [
+        "width=device-width, initial-scale=1.0, height=device-height, minimum-scale=1.0, maximum-scale=5.0",
+        "width=device-width, initial-scale=1.0,\n                                 maximum-scale=1.0, user-scalable=no"
+      ],
+      "shopify-digital-wallet": "/66037121243/digital_wallets/dialog",
+      "ogUrl": "https://www.lashkaraa.in/collections/men",
+      "twitter:card": "summary",
+      "color-scheme": "light dark",
+      "favicon": "https://www.lashkaraa.in/cdn/shop/files/fav.png?v=1758797844&width=96",
+      "scrapeId": "019eb615-8ddd-71f1-a0c2-12ad5132f1cf",
+      "sourceURL": "https://www.lashkaraa.in/collections/men",
+      "url": "https://www.lashkaraa.in/collections/men",
+      "statusCode": 200,
+      "contentType": "text/html; charset=utf-8",
+      "proxyUsed": "basic",
+      "cacheState": "hit",
+      "cachedAt": "2026-06-11T09:44:44.543Z",
+      "creditsUsed": 5,
+      "concurrencyLimited": false
+    },
+    "json": {
+      "products": [
+        {
+          "name": "Light Purple Embroidered Silk Sherwani Set",
+          "description": "Elegant light purple silk sherwani set with intricate embroidery.",
+          "realPrice": "₹20,800.00",
+          "discountedPrice": "₹20,800.00",
+          "mainImage": "https://www.lashkaraa.in/cdn/shop/files/Light_Purple_Embroidered_Silk_Sherwani_Set.jpg?v=1757722363&width=1091",
+          "extraImage1": "https://www.lashkaraa.in/cdn/shop/files/LB6153.jpg?v=1757722363&width=1091",
+          "extraImage2": "",
+          "brand": "Lashkaraa",
+          "sizesAvailable": [
+            "S",
+            "M",
+            "L",
+            "XL"
+          ]
+        },
+        {
+          "name": "Periwinkle Velvet Embroidered Jacket With Kurta Set",
+          "description": "Stylish periwinkle velvet jacket set with kurta, perfect for festive occasions.",
+          "realPrice": "₹64,800.00",
+          "discountedPrice": "₹64,800.00",
+          "mainImage": "https://www.lashkaraa.in/cdn/shop/products/laksharaa20-0902297101copy.jpg?v=1667213585&width=800",
+          "extraImage1": "https://www.lashkaraa.in/cdn/shop/products/laksharaa20-0902297171copy.jpg?v=1667213585&width=800",
+          "extraImage2": "",
+          "brand": "Lashkaraa",
+          "sizesAvailable": [
+            "S",
+            "M",
+            "L",
+            "XL"
+          ]
+        },
+        {
+          "name": "Black Embroidered Brocade Sherwani Set",
+          "description": "Classic black embroidered brocade sherwani set.",
+          "realPrice": "₹20,800.00",
+          "discountedPrice": "₹20,800.00",
+          "mainImage": "https://www.lashkaraa.in/cdn/shop/files/Black_Embroidered_Brocade_Sherwani_Set.jpg?v=1757722339&width=1091",
+          "extraImage1": "https://www.lashkaraa.in/cdn/shop/files/LB6333.jpg?v=1757722339&width=1091",
+          "extraImage2": "",
+          "brand": "Lashkaraa",
+          "sizesAvailable": [
+            "S",
+            "M",
+            "L",
+            "XL"
+          ]
+        },
+        {
+          "name": "Soft Mint Hand Embroidered Velvet Jodhpuri Set",
+          "description": "Luxurious hand embroidered velvet jodhpuri set in soft mint.",
+          "realPrice": "₹124,600.00",
+          "discountedPrice": "₹124,600.00",
+          "mainImage": "https://www.lashkaraa.in/cdn/shop/products/laksharaa20-0902280961copy.jpg?v=1667213570&width=800",
+          "extraImage1": "https://www.lashkaraa.in/cdn/shop/products/laksharaa20-0902281171copy.jpg?v=1667213570&width=800",
+          "extraImage2": "",
+          "brand": "Lashkaraa",
+          "sizesAvailable": [
+            "S",
+            "M",
+            "L",
+            "XL"
+          ]
+        },
+        {
+          "name": "Light Pink Embroidered Kurta Set",
+          "description": "Charming light pink embroidered kurta set for men.",
+          "realPrice": "₹16,400.00",
+          "discountedPrice": "₹16,400.00",
+          "mainImage": "https://www.lashkaraa.in/cdn/shop/files/Light_Pink_Embroidered_Kurta_Set_bcac15c8-5f6f-47e4-8e30-842c0aebb2d1.jpg?v=1757725457&width=1091",
+          "extraImage1": "https://www.lashkaraa.in/cdn/shop/files/LB5752_720333d7-7d41-4ae9-9e7a-cbc7b39e4a6b.jpg?v=1757725457&width=1091",
+          "extraImage2": "",
+          "brand": "Lashkaraa",
+          "sizesAvailable": [
+            "S",
+            "M",
+            "L",
+            "XL"
+          ]
+        }
+      ]
+    }
+  }
+}

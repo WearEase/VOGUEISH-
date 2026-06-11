@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { Filter } from "lucide-react";
-import { products } from "@/data/products";
 import SearchBar from "@/components/shop/SearchBar";
 import ProductFilters, { FilterState } from "@/components/shop/ProductFilters";
 import SortDropdown from "@/components/shop/SortDropDown";
@@ -26,9 +25,6 @@ const parsePrice = (value: number | string | undefined): number => {
   return Number.isFinite(numeric) ? numeric : 0;
 };
 
-// Dynamically extract unique brands and categories
-const uniqueBrands = Array.from(new Set(products.map(p => p.brand))).sort();
-
 const staticFilterOptions = {
   priceRange: [
     { label: "Under ₹1,000", value: "0-1000" },
@@ -37,7 +33,7 @@ const staticFilterOptions = {
     { label: "₹5,000 - ₹10,000", value: "5000-10000" },
     { label: "Above ₹10,000", value: "10000-999999" },
   ],
-  gender: ["Men", "Women", "Unisex"], // Keep this if 'gender' property is used for this filter
+  gender: ["Men", "Women", "Unisex"],
   sortBy: [
     { label: "Popularity", value: "popularity" },
     { label: "Price: Low to High", value: "price-asc" },
@@ -48,6 +44,8 @@ const staticFilterOptions = {
 };
 
 export default function ShopPage() {
+  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     category: "All",
     brand: [],
@@ -55,17 +53,41 @@ export default function ShopPage() {
     gender: [],
     sortBy: "popularity",
     searchQuery: "",
+    collectionType: [],
   });
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
 
-  // Memoize filter options so they include dynamic brands
-  const filterOptions = useMemo(() => ({
-    ...staticFilterOptions,
-    brand: uniqueBrands,
-  }), []);
+  // Fetch products from database API
+  useEffect(() => {
+    async function getProducts() {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          setProductsList(data);
+        }
+      } catch (err) {
+        console.error("Error fetching products", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    getProducts();
+  }, []);
+
+  // Compute dynamic brands and collection types
+  const filterOptions = useMemo(() => {
+    const uniqueBrands = Array.from(new Set(productsList.map(p => p.brand))).sort();
+    const uniqueCollectionTypes = Array.from(new Set(productsList.map(p => p.collectionType).filter(Boolean))).sort() as string[];
+    return {
+      ...staticFilterOptions,
+      brand: uniqueBrands,
+      collectionType: uniqueCollectionTypes,
+    };
+  }, [productsList]);
 
   useEffect(() => {
     // const savedWishlist = localStorage.getItem('ecommerce-wishlist');
@@ -88,6 +110,7 @@ export default function ShopPage() {
       gender: [],
       sortBy: "popularity",
       searchQuery: "",
+      collectionType: [],
     });
   };
 
@@ -109,25 +132,41 @@ export default function ShopPage() {
   };
 
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...products];
+    let filtered = [...productsList];
     if (filters.searchQuery) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
-        product.brand.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(filters.searchQuery.toLowerCase())
-      );
+      const isNumeric = /^\d+$/.test(filters.searchQuery);
+      if (isNumeric) {
+        const searchPrice = parseInt(filters.searchQuery, 10);
+        filtered = filtered.filter(product => {
+          const price = typeof product.discountedPrice === 'string'
+            ? parseInt(product.discountedPrice.replace(/[^\d]/g, ''))
+            : product.discountedPrice;
+          const rPrice = typeof product.realPrice === 'string'
+            ? parseInt(product.realPrice.replace(/[^\d]/g, ''))
+            : product.realPrice;
+          return price === searchPrice || rPrice === searchPrice;
+        });
+      } else {
+        filtered = filtered.filter(product =>
+          product.name.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+          product.brand.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+          product.description.toLowerCase().includes(filters.searchQuery.toLowerCase())
+        );
+      }
     }
     if (filters.category !== "All") {
-      // Assuming 'category' filter currently maps to nothing direct in products schema shown, 
-      // but usually might map to gender or a category field. 
-      // If category filter is intended for gender:
-      // filtered = filtered.filter(product => product.gender === filters.category);
+      // Keep category filter mapping if needed
     }
 
-    // Logic for brand filter (case insensitive)
     if (filters.brand.length > 0) {
       filtered = filtered.filter(product =>
         filters.brand.some(b => b.toLowerCase() === product.brand.toLowerCase())
+      );
+    }
+
+    if (filters.collectionType && filters.collectionType.length > 0) {
+      filtered = filtered.filter(product =>
+        filters.collectionType.some(t => t.toLowerCase() === (product.collectionType || '').toLowerCase())
       );
     }
 
@@ -163,8 +202,6 @@ export default function ShopPage() {
         });
         break;
       case 'newest':
-        // filtered.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
-        // Using arrivalDate if available
         filtered.sort((a, b) => new Date(b.arrivalDate || '').getTime() - new Date(a.arrivalDate || '').getTime());
         break;
       case 'rating':
@@ -172,16 +209,25 @@ export default function ShopPage() {
         break;
     }
     return filtered;
-  }, [filters]);
+  }, [filters, productsList]);
 
   const activeFiltersCount = [
     ...filters.brand,
     ...filters.gender,
+    ...(filters.collectionType || []),
     filters.priceRange,
     filters.searchQuery,
   ].filter(Boolean).length + (filters.category !== "All" ? 1 : 0);
 
   const wishlistSlugs = wishlist.map(item => item.slug);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500 font-medium animate-pulse text-lg">Loading products...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -6,14 +6,30 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 
 const SellerSignIn = () => { 
   const { sellerSignIn, sellerGoogleSignIn, sendVerificationLink, sendPasswordResetLink, isLoading, error, clearError } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const verified = searchParams.get("verified");
+    const errorParam = searchParams.get("error");
+    const messageParam = searchParams.get("message");
+
+    if (verified === "true") {
+      setAuthMessage("Email verified successfully! You can now sign in.");
+      setAuthError(null);
+    } else if (errorParam) {
+      setAuthError(messageParam || "Email verification failed.");
+      setAuthMessage(null);
+    }
+  }, [searchParams]);
 
   const {
     register,

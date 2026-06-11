@@ -7,6 +7,7 @@ export interface FilterState {
   gender: string[];
   sortBy: string;
   searchQuery: string;
+  collectionType: string[];
 }
 
 interface FilterOptions {
@@ -14,6 +15,7 @@ interface FilterOptions {
   priceRange: { label: string; value: string }[];
   gender: string[];
   sortBy: { label: string; value: string }[];
+  collectionType: string[];
 }
 
 interface ProductFiltersProps {
@@ -35,8 +37,8 @@ export default function ProductFilters({
   isMobile = false,
   onClose,
 }: ProductFiltersProps) {
-  const handleMultiSelectFilter = (filterType: 'brand' | 'gender', value: string) => {
-    const currentValues = filters[filterType];
+  const handleMultiSelectFilter = (filterType: 'brand' | 'gender' | 'collectionType', value: string) => {
+    const currentValues = filters[filterType] || [];
     const newValues = currentValues.includes(value)
       ? currentValues.filter(item => item !== value)
       : [...currentValues, value];
@@ -82,7 +84,7 @@ export default function ProductFilters({
           {/* Brand Filter */}
           <div>
             <h4 className="font-semibold text-gray-900 mb-4 text-sm uppercase tracking-wide">Brand</h4>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-48 overflow-y-auto pr-2 scrollbar-thin">
               {filterOptions.brand.map((brand) => (
                 <label key={brand} className="flex items-center group cursor-pointer">
                   <div className="relative">
@@ -100,6 +102,30 @@ export default function ProductFilters({
               ))}
             </div>
           </div>
+
+          {/* Collection Type Filter */}
+          {filterOptions.collectionType && filterOptions.collectionType.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-4 text-sm uppercase tracking-wide">Collection Type</h4>
+              <div className="space-y-3 max-h-48 overflow-y-auto pr-2 scrollbar-thin">
+                {filterOptions.collectionType.map((type) => (
+                  <label key={type} className="flex items-center group cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={(filters.collectionType || []).includes(type)}
+                        onChange={() => handleMultiSelectFilter('collectionType', type)}
+                        className="w-5 h-5 rounded-md border-2 border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                      />
+                    </div>
+                    <span className="ml-3 text-gray-700 group-hover:text-gray-900 transition-colors">
+                      {type}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Price Range Filter */}
           <div>
