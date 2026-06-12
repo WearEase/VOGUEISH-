@@ -133,6 +133,7 @@ export default function ProductPage() {
   useEffect(() => {
     if (!didHydrateStorage) return;
     localStorage.setItem('ecommerce-wishlist', JSON.stringify(wishlist));
+    window.dispatchEvent(new Event('ecommerce-cart-updated')); // Sync updates
   }, [wishlist, didHydrateStorage]);
 
   const addToCart = () => {

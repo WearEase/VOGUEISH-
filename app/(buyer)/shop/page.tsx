@@ -90,12 +90,13 @@ export default function ShopPage() {
   }, [productsList]);
 
   useEffect(() => {
-    // const savedWishlist = localStorage.getItem('ecommerce-wishlist');
-    // if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
+    const savedWishlist = localStorage.getItem('ecommerce-wishlist');
+    if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
   }, []);
 
   useEffect(() => {
-    // localStorage.setItem('ecommerce-wishlist', JSON.stringify(wishlist));
+    localStorage.setItem('ecommerce-wishlist', JSON.stringify(wishlist));
+    window.dispatchEvent(new Event('ecommerce-cart-updated')); // Trigger navbar header counts refresh
   }, [wishlist]);
 
   const handleFilterChange = (newFilters: FilterState) => {

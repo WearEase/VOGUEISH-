@@ -13,7 +13,17 @@ function TrackingContent() {
     const orderId = searchParams.get('orderId') ?? 'ORD-8821';
     const order = demoOrders.find((item) => item.id === orderId) ?? demoOrders[0];
     const [showOtp, setShowOtp] = useState(false);
-    const [otp] = useState(Math.floor(1000 + Math.random() * 9000)); // Random 4-digit OTP
+    const [otp] = useState(4321); // Set expected stylist arrival OTP as 4321
+    const [trialId, setTrialId] = useState('HT-8402');
+
+    React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const activeId = localStorage.getItem('activeHomeTrialId');
+            if (activeId) {
+                setTrialId(activeId);
+            }
+        }
+    }, []);
 
     React.useEffect(() => {
         if (variant === 'order' && orderId) {
@@ -31,7 +41,7 @@ function TrackingContent() {
     const handleCompleteService = () => {
         // Simulate next step
         if (variant === 'trial') {
-            router.push('/otp?next=/billing');
+            router.push(`/otp?next=/my-account&trialId=${trialId}&type=stylist_arrival&otp=4321`);
         } else {
             router.push('/otp?next=/shop');
         }

@@ -52,11 +52,15 @@ export default function AddressDetailsPage() {
         // Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        // Save to local storage or context if needed (omitted for now)
-        console.log('Booking Data:', data);
+        // Save to local storage so the payment step can load them
+        try {
+            localStorage.setItem('lastEnteredAddress', JSON.stringify(data));
+        } catch (e) {
+            console.error('Failed to save last entered address', e);
+        }
 
         toast.success('Address details saved!');
-        router.push('/tracking');
+        router.push('/home-trial-payment');
         setIsSubmitting(false);
     };
 

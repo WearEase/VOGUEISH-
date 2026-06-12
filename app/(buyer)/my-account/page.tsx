@@ -34,6 +34,7 @@ interface HomeTrial {
   vendorStatus: string;
   otpVerified: boolean;
   items: TrialItem[];
+  date?: string;
 }
 
 interface Donation {
@@ -62,12 +63,12 @@ const readLocalUser = (): LocalUser | null => {
 export default function MyAccountPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [localUser, setLocalUser] = useState<LocalUser | null>(() => readLocalUser());
+  const [localUser] = useState<LocalUser | null>(() => readLocalUser());
 
   // States for Home Trials & Donations
   const [homeTrials, setHomeTrials] = useState<HomeTrial[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
-  const [wishlist, setWishlist] = useState<{ id: string; name: string; brand: string; price: number; image: string }[]>([]);
+  const [wishlist, setWishlist] = useState<{ id: string; name: string; brand: string; price: number; image: string; slug?: string }[]>([]);
 
   // OTP Verification state
   const [verifyingTrialId, setVerifyingTrialId] = useState<string | null>(null);
@@ -79,35 +80,24 @@ export default function MyAccountPage() {
   const [selectedNgo, setSelectedNgo] = useState("Goonj NGO");
   const [donationClothesCount, setDonationClothesCount] = useState("5-10 Items");
 
+  // Selection state for completed trial checkout
+  const [selectedTrialItems, setSelectedTrialItems] = useState<Record<string, string[]>>({});
+
+  const toggleItemSelection = (trialId: string, itemName: string) => {
+    setSelectedTrialItems(prev => {
+      const selected = prev[trialId] || [];
+      const updated = selected.includes(itemName)
+        ? selected.filter(name => name !== itemName)
+        : [...selected, itemName];
+      return { ...prev, [trialId]: updated };
+    });
+  };
+
+  const isAuthed = (status === "authenticated" && !!session?.user) || !!localUser;
+
+  // Load wishlist from standard localstorage key
   useEffect(() => {
-    setLocalUser(readLocalUser());
-
-    // Load home trials from localStorage or set initial mocks
-    const storedTrials = localStorage.getItem("profileHomeTrials");
-    if (storedTrials) {
-      try {
-        setHomeTrials(JSON.parse(storedTrials));
-      } catch {
-        initTrials();
-      }
-    } else {
-      initTrials();
-    }
-
-    // Load donations from localStorage or set initial mocks
-    const storedDonations = localStorage.getItem("profileDonations");
-    if (storedDonations) {
-      try {
-        setDonations(JSON.parse(storedDonations));
-      } catch {
-        initDonations();
-      }
-    } else {
-      initDonations();
-    }
-
-    // Load wishlist from localStorage or set initial mocks
-    const storedWishlist = localStorage.getItem("profileWishlist");
+    const storedWishlist = localStorage.getItem("ecommerce-wishlist");
     if (storedWishlist) {
       try {
         setWishlist(JSON.parse(storedWishlist));
@@ -118,6 +108,57 @@ export default function MyAccountPage() {
       initWishlist();
     }
   }, []);
+
+  // Fetch trials and donations from APIs
+  useEffect(() => {
+    if (!isAuthed) return;
+    const email = session?.user?.email ?? localUser?.email ?? "buyer@vogueish.com";
+
+    async function fetchData() {
+      try {
+        const resTrials = await fetch(`/api/home-trials?email=${encodeURIComponent(email)}`);
+        if (resTrials.ok) {
+          const data = await resTrials.json();
+          if (data && data.length > 0) {
+            setHomeTrials(data);
+          } else {
+            // Check local storage fallback
+            const localTrials = localStorage.getItem("profileHomeTrials");
+            if (localTrials) {
+              setHomeTrials(JSON.parse(localTrials));
+            } else {
+              initTrials();
+            }
+          }
+        } else {
+          initTrials();
+        }
+
+        const resDonations = await fetch(`/api/donations?email=${encodeURIComponent(email)}`);
+        if (resDonations.ok) {
+          const data = await resDonations.json();
+          if (data && data.length > 0) {
+            setDonations(data);
+          } else {
+            const localDonations = localStorage.getItem("profileDonations");
+            if (localDonations) {
+              setDonations(JSON.parse(localDonations));
+            } else {
+              initDonations();
+            }
+          }
+        } else {
+          initDonations();
+        }
+      } catch (err) {
+        console.error("Failed to load profile details from DB", err);
+        initTrials();
+        initDonations();
+      }
+    }
+
+    fetchData();
+  }, [isAuthed, session, localUser]);
 
   const initTrials = () => {
     const initialTrials: HomeTrial[] = [
@@ -174,9 +215,10 @@ export default function MyAccountPage() {
   };
 
   const handleRemoveWishlist = (id: string) => {
-    const updated = wishlist.filter(item => item.id !== id);
+    const updated = wishlist.filter(item => item.id !== id && item.slug !== id);
     setWishlist(updated);
-    localStorage.setItem("profileWishlist", JSON.stringify(updated));
+    localStorage.setItem("ecommerce-wishlist", JSON.stringify(updated));
+    window.dispatchEvent(new Event('ecommerce-cart-updated')); // sync headers
     toast.success("Item removed from your wishlist.");
   };
  
@@ -185,10 +227,7 @@ export default function MyAccountPage() {
     localStorage.setItem("profileHomeTrials", JSON.stringify(newTrials));
   };
 
-  const updateDonationsLocal = (newDonations: Donation[]) => {
-    setDonations(newDonations);
-    localStorage.setItem("profileDonations", JSON.stringify(newDonations));
-  };
+
 
   useEffect(() => {
     if (status === "unauthenticated" && !localUser) {
@@ -219,8 +258,6 @@ export default function MyAccountPage() {
     );
   }
 
-  const isAuthed = (status === "authenticated" && !!session?.user) || !!localUser;
-  
   const handleSignOut = async () => {
     try {
       localStorage.removeItem("user");
@@ -237,14 +274,28 @@ export default function MyAccountPage() {
 
   // 2nd OTP verification trigger
   const handleVerifyVendorArrival = (trialId: string) => {
-    setVerifyingTrialId(trialId);
-    setEnteredOtp("");
+    // Redirect directly to the OTP verification screen for stylist arrival code
+    router.push(`/otp?next=/my-account&trialId=${trialId}&type=stylist_arrival&otp=4321`);
   };
 
-  const confirmOtpVerification = (trialId: string) => {
+  const confirmOtpVerification = async (trialId: string) => {
     if (enteredOtp.trim() !== "4321") {
       toast.error("Invalid security OTP. Enter '4321' for demo verification.");
       return;
+    }
+
+    try {
+      await fetch(`/api/home-trials/${trialId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'Completed',
+          vendorStatus: 'Completed - Items Trialled',
+          otpVerified: true,
+        }),
+      });
+    } catch (err) {
+      console.error(err);
     }
 
     const updatedTrials = homeTrials.map(trial => {
@@ -252,7 +303,7 @@ export default function MyAccountPage() {
         return {
           ...trial,
           status: "Completed",
-          vendorStatus: "Completed - Tailoring Allowed",
+          vendorStatus: "Completed - Items Trialled",
           otpVerified: true
         };
       }
@@ -266,7 +317,7 @@ export default function MyAccountPage() {
   };
 
   // Handle donation booking submit
-  const handleBookDonation = (e: React.FormEvent) => {
+  const handleBookDonation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTrialForDonation) {
       toast.error("Please select a linked Home Trial first.");
@@ -274,21 +325,44 @@ export default function MyAccountPage() {
     }
 
     const linkedTrial = homeTrials.find(t => t.id === selectedTrialForDonation);
-    const dateStr = linkedTrial ? linkedTrial.placedAt : "18 Jun 2026";
+    const dateStr = linkedTrial ? linkedTrial.date || linkedTrial.placedAt : "18 Jun 2026";
+    const email = session?.user?.email ?? localUser?.email ?? "buyer@vogueish.com";
+    const donationId = `#VOG-DON-${Math.floor(10000 + Math.random() * 90000)}`;
 
-    const newDonation = {
-      id: `#VOG-DON-${Math.floor(10000 + Math.random() * 90000)}`,
+    const donationPayload = {
+      id: donationId,
+      userEmail: email,
       ngoName: selectedNgo,
       pickupDate: dateStr,
       timeSlot: "11:00 AM–1:00 PM",
       itemType: donationClothesCount,
-      status: "Pickup Scheduled",
       linkedTrialId: selectedTrialForDonation
     };
 
-    updateDonationsLocal([newDonation, ...donations]);
-    setIsBookingDonation(false);
-    toast.success("Donation pickup scheduled! Vendor will collect garments during the Home Trial.");
+    try {
+      const res = await fetch('/api/donations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(donationPayload),
+      });
+
+      if (!res.ok) {
+        throw new Error('API failed to save Donation');
+      }
+
+      const savedDonation = await res.json();
+      setDonations([savedDonation, ...donations]);
+      
+      // Update local storage backup
+      const stored = JSON.parse(localStorage.getItem('profileDonations') || '[]');
+      localStorage.setItem('profileDonations', JSON.stringify([savedDonation, ...stored]));
+
+      setIsBookingDonation(false);
+      toast.success("Donation pickup scheduled! Vendor will collect garments during the Home Trial.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to book donation. Please try again.");
+    }
   };
 
   return (
@@ -349,7 +423,7 @@ export default function MyAccountPage() {
               <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 flex flex-col justify-between">
                 <div className="flex items-start gap-5">
                   <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-zinc-100 flex items-center justify-center flex-shrink-0">
-                    {session?.user?.image ? (
+                    {session?.user?.image && typeof session.user.image === 'string' && session.user.image.trim() !== '' ? (
                       <Image src={session.user.image} alt="Profile" fill className="object-cover" />
                     ) : (
                       <UserIcon className="w-7 h-7 text-gray-500" />
@@ -519,9 +593,21 @@ export default function MyAccountPage() {
                         {trial.items.map((item: TrialItem) => (
                           <div key={item.name} className="rounded-2xl border border-gray-100 p-4 bg-zinc-50/20 flex flex-col justify-between">
                             <div>
+                              {trial.status === "Completed" && (
+                                <label className="flex items-center gap-2 mb-3 cursor-pointer pb-2 border-b border-gray-150">
+                                  <input
+                                    type="checkbox"
+                                    checked={(selectedTrialItems[trial.id] || []).includes(item.name)}
+                                    onChange={() => toggleItemSelection(trial.id, item.name)}
+                                    className="w-4 h-4 text-black focus:ring-black rounded cursor-pointer"
+                                  />
+                                  <span className="text-xs font-semibold text-gray-800">Keep & Buy Outfit</span>
+                                </label>
+                              )}
                               <p className="font-semibold text-sm text-gray-900">{item.name}</p>
                               <p className="text-xs text-gray-500">{item.brand}</p>
                               <p className="mt-1 text-xs text-gray-600">Size: {item.size}</p>
+                              <p className="mt-1 text-xs font-semibold text-gray-900">₹{item.price.toLocaleString()}</p>
                             </div>
                             
                             {/* Alteration option strictly only after OTP verification completed */}
@@ -546,6 +632,39 @@ export default function MyAccountPage() {
                           </div>
                         ))}
                       </div>
+
+                      {/* Buy Selected button */}
+                      {trial.status === "Completed" && (
+                        <div className="mt-2 bg-zinc-50 border border-zinc-200 rounded-2xl p-4 flex items-center justify-between flex-wrap gap-4">
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium">Outfits Selected to Keep:</p>
+                            <p className="text-sm font-semibold text-gray-900 mt-0.5">
+                              {(selectedTrialItems[trial.id] || []).length} items selected
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const selected = selectedTrialItems[trial.id] || [];
+                              if (selected.length === 0) {
+                                toast.error('Please select at least one outfit to purchase.');
+                                return;
+                              }
+                              // Save itemsBought list to MDB
+                              fetch(`/api/home-trials/${trial.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ itemsBought: selected }),
+                              }).catch(console.error);
+
+                              // Redirect to billing
+                              router.push(`/billing?source=home-trial-buy&trialId=${trial.id}&items=${encodeURIComponent(selected.join(','))}`);
+                            }}
+                            className="bg-black hover:bg-zinc-800 text-white text-xs px-5 py-2.5 rounded-xl transition font-semibold"
+                          >
+                            Proceed to Final Payment
+                          </button>
+                        </div>
+                      )}
 
                       {/* Verification Flow for vendor arrival */}
                       {!trial.otpVerified && (
@@ -747,7 +866,7 @@ export default function MyAccountPage() {
                       <div key={item.id} className="group relative rounded-2xl border border-gray-200 overflow-hidden bg-white hover:shadow-md transition duration-300 flex flex-col">
                         <div className="relative aspect-[4/3] bg-zinc-100 overflow-hidden">
                           <Image
-                            src={item.image}
+                            src={typeof item.image === 'string' && item.image.trim() !== '' ? item.image : '/Nav-logo.png'}
                             alt={item.name}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"

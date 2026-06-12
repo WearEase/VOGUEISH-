@@ -23,7 +23,7 @@ export default function WishlistSidebar({ wishlist }: WishlistSidebarProps) {
               <Link href={`/shop/${item.slug}`} className="flex-shrink-0">
                 <div className="w-16 h-20 bg-gray-100 rounded-lg overflow-hidden">
                   <Image
-                    src={item.image}
+                    src={typeof item.image === 'string' && item.image.trim() !== '' ? item.image : '/Nav-logo.png'}
                     alt={item.name}
                     width={64}
                     height={80}

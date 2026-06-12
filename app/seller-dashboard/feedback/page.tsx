@@ -86,7 +86,7 @@ const FeedbackCard: React.FC<{ feedback: FeedbackItem; isSelected: boolean }> = 
         <div className="flex items-center gap-3">
           <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-850">
             <Image
-              src={feedback.userAvatar}
+              src={typeof feedback.userAvatar === 'string' && feedback.userAvatar.trim() !== '' ? feedback.userAvatar : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face'}
               alt={feedback.userName}
               fill
               sizes="32px"
@@ -107,7 +107,7 @@ const FeedbackCard: React.FC<{ feedback: FeedbackItem; isSelected: boolean }> = 
           {feedback.images.map((img, idx) => (
             <div key={idx} className="relative w-12 h-12 rounded overflow-hidden border border-gray-200 dark:border-zinc-800 bg-gray-100">
               <Image
-                src={img}
+                src={typeof img === 'string' && img.trim() !== '' ? img : '/Nav-logo.png'}
                 alt={`Review image ${idx + 1}`}
                 fill
                 sizes="48px"
@@ -132,7 +132,7 @@ const FeedbackDetailModal: React.FC<{
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-850">
               <Image
-                src={feedback.userAvatar}
+                src={typeof feedback.userAvatar === 'string' && feedback.userAvatar.trim() !== '' ? feedback.userAvatar : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face'}
                 alt={feedback.userName}
                 fill
                 sizes="40px"
@@ -162,7 +162,7 @@ const FeedbackDetailModal: React.FC<{
             {feedback.images.map((img, idx) => (
               <div key={idx} className="relative w-full h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-zinc-800 bg-gray-150">
                 <Image
-                  src={img}
+                  src={typeof img === 'string' && img.trim() !== '' ? img : '/Nav-logo.png'}
                   alt={`Review image ${idx + 1}`}
                   fill
                   sizes="180px"
@@ -220,7 +220,7 @@ export default function Feedback() {
               <div className="flex items-center gap-3 mb-4">
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-850">
                   <Image
-                    src={selectedFeedback.userAvatar}
+                    src={typeof selectedFeedback.userAvatar === 'string' && selectedFeedback.userAvatar.trim() !== '' ? selectedFeedback.userAvatar : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face'}
                     alt={selectedFeedback.userName}
                     fill
                     sizes="40px"
@@ -246,7 +246,7 @@ export default function Feedback() {
                   {selectedFeedback.images.map((img, idx) => (
                     <div key={idx} className="relative w-full h-20 rounded overflow-hidden border border-gray-250 dark:border-zinc-800 bg-gray-150">
                       <Image
-                        src={img}
+                        src={typeof img === 'string' && img.trim() !== '' ? img : '/Nav-logo.png'}
                         alt={`Review image ${idx + 1}`}
                         fill
                         sizes="120px"

@@ -24,9 +24,14 @@ function OtpContent() {
   const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
-    // Demo OTP for UI flow.
-    setExpectedOtp(generateOtp());
-  }, []);
+    // Check if an OTP was passed in the query parameters
+    const queryOtp = searchParams.get('otp');
+    if (queryOtp) {
+      setExpectedOtp(queryOtp);
+    } else {
+      setExpectedOtp(generateOtp());
+    }
+  }, [searchParams]);
 
   const handleVerify = async () => {
     if (inputOtp.trim().length !== 4) {
@@ -37,7 +42,7 @@ function OtpContent() {
     setIsVerifying(true);
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // Demo behavior: accept correct OTP; if you want to accept any OTP, remove this check.
+    // Demo behavior: accept correct OTP
     if (inputOtp.trim() !== expectedOtp) {
       setIsVerifying(false);
       toast.error('Invalid OTP. Please try again.');
@@ -45,20 +50,46 @@ function OtpContent() {
     }
 
     toast.success('OTP verified successfully.');
-    // If this OTP verification was requested as part of completing a Home Trial,
-    // mark the home trial as completed so downstream features (like advanced tailoring)
-    // can be enabled. Supported query flags: `completeHomeTrial=true` or `from=home-trial`.
+
+    // If verifying stylist arrival, update MDB and localStorage home-trials state
     try {
+      const trialId = searchParams.get('trialId');
+      const otpType = searchParams.get('type');
+      if (trialId && otpType === 'stylist_arrival') {
+        // Update database
+        await fetch(`/api/home-trials/${trialId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'Completed',
+            vendorStatus: 'Completed - Items Trialled',
+            otpVerified: true,
+          }),
+        });
+
+        // Update local storage backup
+        const stored = JSON.parse(localStorage.getItem('profileHomeTrials') || '[]');
+        const updated = stored.map((t: { id: string }) => t.id === trialId ? {
+          ...t,
+          status: 'Completed',
+          vendorStatus: 'Completed - Items Trialled',
+          otpVerified: true
+        } : t);
+        localStorage.setItem('profileHomeTrials', JSON.stringify(updated));
+
+        toast.success('Home Trial completed successfully!');
+      }
+
       const fromParam = searchParams.get('from');
       const completeFlag = searchParams.get('completeHomeTrial');
       if (completeFlag === 'true' || fromParam === 'home-trial') {
-        // mark completion via context
         markHomeTrialCompleted();
         toast.success('Home Trial marked complete. Advanced tailoring now available.');
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('Error during trial OTP update:', err);
     }
+
     router.replace(nextUrl);
   };
 
