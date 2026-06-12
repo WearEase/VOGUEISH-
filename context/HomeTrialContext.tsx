@@ -12,7 +12,7 @@ interface HomeTrialContextType {
     addToHomeTrial: (product: Product, size: string) => void;
     removeFromHomeTrial: (productId: string, size: string) => void;
     clearHomeTrial: () => void;
-    isValidTrial: boolean; // True if 5 <= items <= 10
+    isValidTrial: boolean; // True if 2 <= items <= 10
     itemCount: number;
     homeTrialCompleted: boolean;
     markHomeTrialCompleted: () => void;
@@ -87,7 +87,7 @@ export function HomeTrialProvider({ children }: { children: ReactNode }) {
     };
 
     const itemCount = trialItems.length;
-    const isValidTrial = itemCount >= 5 && itemCount <= 10;
+    const isValidTrial = itemCount >= 2 && itemCount <= 10;
 
     return (
         <HomeTrialContext.Provider

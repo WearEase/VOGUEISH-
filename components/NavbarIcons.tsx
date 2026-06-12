@@ -164,13 +164,6 @@ export default function NavbarIcons() {
             >
               🎁 My Donations
             </Link>
-            <Link
-              href={isAuthed ? "/my-account#wishlist" : "/login"}
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white transition"
-            >
-              ❤️ My Wishlist
-            </Link>
           </div>
         )}
       </div>

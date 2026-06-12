@@ -22,7 +22,7 @@ export default function ServiceFeesPage() {
             <div className="min-h-screen bg-[#f9f8f6] py-20 px-6">
                 <div className="max-w-2xl mx-auto text-center">
                     <h1 className="text-3xl font-serif mb-4">Your Home Trial Bag is Empty</h1>
-                    <p className="text-gray-600 mb-8">Select 5-10 items to experience them at home.</p>
+                    <p className="text-gray-600 mb-8">Select 2-10 items to experience them at home.</p>
                     <Link href="/shop" className="inline-flex items-center gap-2 bg-black text-white px-8 py-3 rounded-full hover:bg-neutral-800 transition-colors">
                         <ArrowLeft className="w-4 h-4" />
                         Back to Shop
@@ -47,7 +47,7 @@ export default function ServiceFeesPage() {
                                 <div>
                                     <h3 className="font-semibold text-red-700">Invalid Selection Limit</h3>
                                     <p className="text-sm text-red-600 mt-1">
-                                        Please select between 5 and 10 items for a Home Trial.
+                                        Please select between 2 and 10 items for a Home Trial.
                                         Current count: <strong>{itemCount}</strong>
                                     </p>
                                 </div>
@@ -125,7 +125,7 @@ export default function ServiceFeesPage() {
                                 </button>
                                 {!isValidTrial && (
                                     <p className="text-xs text-center text-red-500 mt-2">
-                                        {itemCount < 5 ? `Add ${5 - itemCount} more item(s)` : `Remove ${itemCount - 10} item(s)`}
+                                        {itemCount < 2 ? `Add ${2 - itemCount} more item(s)` : `Remove ${itemCount - 10} item(s)`}
                                     </p>
                                 )}
                             </div>
