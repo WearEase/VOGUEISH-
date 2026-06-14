@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-06-12T19:28:40.179Z",
+  "metrics": {
+    "latency": {
+      "minMs": 231,
+      "maxMs": 1909,
+      "avgMs": 571.6,
+      "p50Ms": 501,
+      "p95Ms": 1006
+    },
+    "reliability": {
+      "totalRequests": 100,
+      "successfulRequests": 100,
+      "apiSuccessRatePercent": 100,
+      "directJsonPercent": 100,
+      "fallbackRecoveredPercent": 0,
+      "systemReliabilityPercent": 100
+    },
+    "tokens": {
+      "oldSystemTokens": 3422,
+      "newSystemTokens": 1975,
+      "savingsPercent": 42.3
+    },
+    "dbWrites": {
+      "oldSystemWrites": 6,
+      "newSystemWrites": 4,
+      "reductionPercent": 33.3
+    }
+  }
+}

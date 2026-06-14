@@ -1,9 +1,24 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Sparkles, Bot } from 'lucide-react';
+import { Send, User, Sparkles, Bot, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
+
+interface ProductRecommendation {
+    _id: string;
+    id: string;
+    name: string;
+    slug: string;
+    brand: string;
+    discountedPrice: number | string;
+    realPrice: number | string;
+    mainImage: string;
+    description?: string;
+    gender?: string;
+    collectionType?: string;
+}
 
 interface Message {
     id: string;
@@ -12,6 +27,7 @@ interface Message {
     timestamp: Date;
     suggestions?: string[];
     followUps?: string[];
+    products?: ProductRecommendation[];
 }
 
 type TranscriptMessage = {
@@ -223,13 +239,14 @@ export default function ChatBot() {
                 text: payload.reply || payload.error || 'I could not generate a response right now.',
                 timestamp: new Date(),
                 suggestions: Array.isArray(payload.suggestions) ? payload.suggestions : [],
+                products: Array.isArray(payload.products) ? payload.products : [],
             };
 
             setMessages(prev => [...prev, botResponse]);
 
-            // Automatically trigger background refinement every 6 messages (3 full turns) to store memory in MongoDB
+            // Automatically trigger background refinement every 3 messages to store memory in MongoDB
             const totalMsgCount = messages.length + 2; // previous messages + userMsg + botResponse
-            if (totalMsgCount >= 6 && totalMsgCount % 6 === 0) {
+            if (totalMsgCount >= 3 && totalMsgCount % 3 === 0) {
                 const transcriptToRefine = [...messages, userMsg, botResponse].map(({ sender, text }) => ({ sender, text }));
                 fetch('/api/chat/refine', {
                     method: 'POST',
@@ -327,6 +344,66 @@ export default function ChatBot() {
                                     : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
                                 }`}>
                                 <RichMessage text={msg.text} />
+                                {msg.products && msg.products.length > 0 && (
+                                    <div className="mt-4 space-y-2">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Recommended Products</p>
+                                        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200">
+                                            {msg.products.map((product) => {
+                                                const realPriceNum = typeof product.realPrice === 'string' ? Number(product.realPrice.replace(/[^0-9.]/g, '')) : product.realPrice;
+                                                const discountedPriceNum = typeof product.discountedPrice === 'string' ? Number(product.discountedPrice.replace(/[^0-9.]/g, '')) : product.discountedPrice;
+                                                const discountPercentage = realPriceNum > discountedPriceNum 
+                                                    ? Math.round(((realPriceNum - discountedPriceNum) / realPriceNum) * 100)
+                                                    : 0;
+
+                                                return (
+                                                    <Link
+                                                        key={product._id || product.id}
+                                                        href={`/shop/${product.slug}`}
+                                                        className="group flex-shrink-0 w-40 bg-white border border-neutral-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
+                                                    >
+                                                        <div className="relative w-full h-28 bg-neutral-50 overflow-hidden">
+                                                            <Image
+                                                                src={product.mainImage}
+                                                                alt={product.name}
+                                                                fill
+                                                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                                                sizes="160px"
+                                                            />
+                                                            {discountPercentage > 0 && (
+                                                                <span className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full z-10">
+                                                                    -{discountPercentage}%
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="p-2.5 flex-1 flex flex-col justify-between">
+                                                            <div>
+                                                                <span className="text-[9px] text-neutral-400 font-semibold tracking-wider uppercase block mb-0.5">{product.brand}</span>
+                                                                <h4 className="text-[11px] font-semibold text-neutral-800 line-clamp-2 leading-snug group-hover:text-black transition-colors">
+                                                                    {product.name}
+                                                                </h4>
+                                                            </div>
+                                                            <div className="mt-2 flex items-center justify-between">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-xs font-bold text-neutral-900">
+                                                                        ₹{new Intl.NumberFormat('en-IN').format(discountedPriceNum)}
+                                                                    </span>
+                                                                    {discountPercentage > 0 && (
+                                                                        <span className="text-[9px] text-neutral-400 line-through">
+                                                                            ₹{new Intl.NumberFormat('en-IN').format(realPriceNum)}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="w-5 h-5 rounded-full bg-neutral-900 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                                    <ShoppingBag className="w-2.5 h-2.5" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
                                 {msg.suggestions && msg.suggestions.length > 0 && (
                                     <div className="mt-3 flex flex-wrap gap-2">
                                         {msg.suggestions.map((suggestion, index) => {

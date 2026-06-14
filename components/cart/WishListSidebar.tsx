@@ -18,12 +18,16 @@ export default function WishlistSidebar({ wishlist }: WishlistSidebarProps) {
           Your Wishlist
         </h3>
         <div className="space-y-4">
-          {wishlist.slice(0, 3).map(item => (
+          {wishlist.slice(0, 3).map((item) => (
             <div key={item.id} className="flex gap-3">
               <Link href={`/shop/${item.slug}`} className="flex-shrink-0">
                 <div className="w-16 h-20 bg-gray-100 rounded-lg overflow-hidden">
                   <Image
-                    src={typeof item.image === 'string' && item.image.trim() !== '' ? item.image : '/Nav-logo.png'}
+                    src={
+                      typeof item.image === "string" && item.image.trim() !== ""
+                        ? item.image
+                        : "/Nav-logo.png"
+                    }
                     alt={item.name}
                     width={64}
                     height={80}
