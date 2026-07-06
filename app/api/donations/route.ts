@@ -30,10 +30,14 @@ export async function POST(request: Request) {
       id,
       userEmail,
       ngoName,
+      ngoId,
       pickupDate,
       timeSlot,
       itemType,
       linkedTrialId,
+      addressLine1,
+      pincode,
+      phone,
     } = body;
 
     if (!id || !userEmail || !ngoName || !pickupDate || !timeSlot || !itemType || !linkedTrialId) {
@@ -45,10 +49,14 @@ export async function POST(request: Request) {
       id,
       userEmail,
       ngoName,
+      ngoId: ngoId || undefined,
       pickupDate,
       timeSlot,
       itemType,
       linkedTrialId,
+      addressLine1: addressLine1 || undefined,
+      pincode: pincode || undefined,
+      phone: phone || undefined,
       status: 'Pickup Scheduled',
     });
 

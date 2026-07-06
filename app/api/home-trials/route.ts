@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { HomeTrialModel } from '@/models/HomeTrial';
+import { User } from '@/models/UserSchema';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +61,12 @@ export async function POST(request: Request) {
       otpVerified: false,
       itemsBought: [],
     });
+
+    // Push this trial's _id into the user's homeTrials array
+    await User.findOneAndUpdate(
+      { email: userEmail },
+      { $push: { homeTrials: newTrial._id } }
+    );
 
     return NextResponse.json(newTrial, { status: 201 });
   } catch (error) {
