@@ -53,6 +53,22 @@ const userSchema = new Schema({
   products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
   onboardingComplete: { type: Boolean, default: false },
   
+  // Recommendation Engine specific fields
+  prompts: { type: [String], default: [] },
+  preferences: {
+    occasions: [String],
+    styles: [String],
+    budget: {
+      min: Number,
+      max: Number
+    },
+    colors: [String],
+    gender: String,
+  },
+
+  // Home Trial references — every booked trial's _id is pushed here
+  homeTrials: [{ type: mongoose.Schema.Types.ObjectId, ref: 'HomeTrial' }],
+
 }, { timestamps: true });
 
 export const User = models.User || model('User', userSchema, 'users');

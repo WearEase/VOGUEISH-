@@ -83,14 +83,21 @@ export async function GET(request: Request) {
       sortObj = { popularityRank: 1 };
     }
 
-    let queryBuilder = Product.find(query).sort(sortObj);
+    let queryBuilder = Product.find(query)
+      .select('-imageEmbedding') // Exclude 512-float array — not needed by shop UI, saves ~150KB per response
+      .sort(sortObj);
     if (limit > 0) {
       queryBuilder = queryBuilder.limit(limit);
     }
 
     const dbProducts = await queryBuilder.lean();
 
-    return NextResponse.json(dbProducts);
+    return NextResponse.json(dbProducts, {
+      headers: {
+        // Cache at CDN for 60s; stale-while-revalidate for 300s so repeat visitors get instant response
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      }
+    });
   } catch (error) {
     console.error("API error fetching products:", error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
