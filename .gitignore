@@ -46,9 +46,10 @@ yarn-error.log*
 next-env.d.ts
 
 #agents
-.github
+# .github
 GEMINI.md
 gemini.md
+AGENTS.md
 scripts/scrapeLashkaraa.js
 
 #public data
