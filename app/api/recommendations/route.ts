@@ -114,12 +114,12 @@ export async function POST(req: Request) {
 
     // Apply strict keyword/category filtering if specified
     if (pref.categories && pref.categories.length > 0) {
-      candidates = candidates.filter((p: any) => {
+      candidates = candidates.filter((p: { name?: string; description?: string; metadata?: { category?: string } }) => {
         const pName = (p.name || "").toLowerCase();
         const pDesc = (p.description || "").toLowerCase();
         const pCat = (p.metadata?.category || "").toLowerCase();
         
-        return pref.categories!.some(c => 
+        return pref.categories!.some((c: string) => 
           pName.includes(c) || pDesc.includes(c) || pCat.includes(c)
         );
       });

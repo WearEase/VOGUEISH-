@@ -526,7 +526,7 @@ export default function ChatBot() {
                                         </div>
                                     </div>
                                 )}
-                                <span className={`text-[10px] block mt-2 opacity-50 ${msg.sender === 'user' ? 'text-right' : 'text-left'
+                                <span suppressHydrationWarning={true} className={`text-[10px] block mt-2 opacity-50 ${msg.sender === 'user' ? 'text-right' : 'text-left'
                                     }`}>
                                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
