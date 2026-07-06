@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       {
         role: 'system',
         content:
-          'Create a compact enterprise-wide memory refinement. CRITICAL: DO NOT extract personal user preferences (budget, color, sizes). ONLY extract platform-wide feedback or general trends. Return JSON only with keys refinementPrompt and summary.',
+          'Create a compact fashion-memory refinement. Return JSON only with keys refinementPrompt and summary.',
       },
       {
         role: 'user',
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
       {
         role: 'system',
         content:
-          'Update the central enterprise assistant memory. CRITICAL: This is a GLOBAL COMPANY WIDE context. DO NOT extract or save any personal user preferences (like a user\'s budget, favorite color, size, or specific outfits they want). ONLY extract global platform feedback, bug reports, or overarching trends. Return JSON only with keys refinementPrompt and summary.',
+          'Update one central assistant memory using the transcript and the draft. Return JSON only with keys refinementPrompt and summary.',
       },
       {
         role: 'user',

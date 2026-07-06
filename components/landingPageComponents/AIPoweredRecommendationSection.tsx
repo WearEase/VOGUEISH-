@@ -1,12 +1,12 @@
-"use client";
-import { motion } from "framer-motion";
-import { Cormorant_Garamond } from "next/font/google";
-import Link from "next/link";
+'use client';
+import { motion } from 'framer-motion';
+import { Cormorant_Garamond } from 'next/font/google';
+import Link from 'next/link';
 
 const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  display: "swap",
+  subsets: ['latin'],
+  weight: ['400', '600'],
+  display: 'swap',
 });
 
 export default function AIRecommendationSection() {
@@ -28,9 +28,7 @@ export default function AIRecommendationSection() {
           transition={{ duration: 1 }}
           className={`mt-4 text-lg md:text-xl text-neutral-600 ${cormorant.className}`}
         >
-          Meet your intelligent fashion assistant. Discover outfits, get
-          personalized suggestions, and shop effortlessly — all through one
-          smart chat.
+          Meet your intelligent fashion assistant. Discover outfits, get personalized suggestions, and shop effortlessly — all through one smart chat.
         </motion.p>
       </div>
 
@@ -45,8 +43,7 @@ export default function AIRecommendationSection() {
         >
           <div className="flex flex-col gap-4">
             <div className="bg-white rounded-xl p-4 text-sm shadow-sm max-w-[80%] self-start text-left">
-              👗 Hello! I&apos;m your fashion assistant. Need help with an
-              outfit?
+              👗 Hello! I&apos;m your fashion assistant. Need help with an outfit?
             </div>
             <div className="bg-neutral-100 rounded-xl p-4 text-sm shadow-sm max-w-[80%] self-end text-left">
               Yes! I’m looking for something classy for a dinner date.
@@ -64,9 +61,7 @@ export default function AIRecommendationSection() {
           transition={{ duration: 1 }}
           className="bg-white/60 backdrop-blur-lg rounded-3xl shadow-lg p-6 border border-neutral-200 w-full flex flex-col gap-4"
         >
-          <h3
-            className={`text-xl font-semibold text-left ${cormorant.className}`}
-          >
+          <h3 className={`text-xl font-semibold text-left ${cormorant.className}`}>
             See Your AI Stylist in Action
           </h3>
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-200 shadow-inner group">
@@ -78,9 +73,7 @@ export default function AIRecommendationSection() {
             />
           </div>
           <p className="text-xs text-neutral-500 leading-relaxed text-left">
-            Our intelligent recommendation engine analyzes your style
-            preferences, body profile, and ongoing global fashion trends to
-            curate the perfect luxury wardrobe instantly.
+            Our intelligent recommendation engine analyzes your style preferences, body profile, and ongoing global fashion trends to curate the perfect luxury wardrobe instantly.
           </p>
         </motion.div>
       </div>
@@ -94,10 +87,10 @@ export default function AIRecommendationSection() {
 
       {/* CTA Button */}
       <div className="text-center mt-12 z-10 relative">
-        <Link href="/ai-bot">
-          <button className="inline-block bg-black text-white px-8 py-3 rounded-full tracking-wider uppercase hover:bg-neutral-800 transition-all duration-300">
-            Start Chatting
-          </button>
+        <Link href='/ai-bot'>
+        <button className="inline-block bg-black text-white px-8 py-3 rounded-full tracking-wider uppercase hover:bg-neutral-800 transition-all duration-300">
+          Start Chatting
+        </button>
         </Link>
       </div>
     </section>

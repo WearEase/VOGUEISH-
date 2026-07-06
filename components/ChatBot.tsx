@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Sparkles, Bot, ShoppingBag, Paperclip } from 'lucide-react';
+import { Send, User, Sparkles, Bot, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
@@ -28,8 +28,6 @@ interface Message {
     suggestions?: string[];
     followUps?: string[];
     products?: ProductRecommendation[];
-    imageUrl?: string;
-    imageUrls?: string[];
 }
 
 type TranscriptMessage = {
@@ -100,70 +98,9 @@ export default function ChatBot() {
             timestamp: new Date(),
         }
     ]);
-
-    useEffect(() => {
-        const saved = window.localStorage.getItem('vogueish_chat_messages');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    setMessages(parsed.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
-                }
-            } catch {}
-        }
-    }, []);
-
-    useEffect(() => {
-        if (messages.length > 1) {
-            window.localStorage.setItem('vogueish_chat_messages', JSON.stringify(messages));
-        }
-    }, [messages]);
     const [inputText, setInputText] = useState('');
-    const [imageFiles, setImageFiles] = useState<File[]>([]);
-    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    const addImages = (newFiles: File[]) => {
-        if (newFiles.length === 0) return;
-        
-        setImageFiles(prev => {
-            const combined = [...prev, ...newFiles].slice(0, 3);
-            return combined;
-        });
-        
-        newFiles.forEach(file => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreviews(prev => {
-                    if (prev.length >= 3) return prev;
-                    return [...prev, reader.result as string].slice(0, 3);
-                });
-            };
-            reader.readAsDataURL(file);
-        });
-    };
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        addImages(files);
-        if (e.target) e.target.value = ''; // Reset input
-    };
-
-    const handlePaste = (e: React.ClipboardEvent) => {
-        const items = Array.from(e.clipboardData.items);
-        const files = items
-            .filter(item => item.type.startsWith('image/'))
-            .map(item => item.getAsFile())
-            .filter(Boolean) as File[];
-        addImages(files);
-    };
-
-    const removeImage = (index: number) => {
-        setImageFiles(prev => prev.filter((_, i) => i !== index));
-        setImagePreviews(prev => prev.filter((_, i) => i !== index));
-    };
 
     useEffect(() => {
         if (session?.user) {
@@ -256,21 +193,18 @@ export default function ChatBot() {
     }, [messages, isTyping]);
 
     const handleSend = async () => {
-        if (!inputText.trim() && imageFiles.length === 0) return;
+        if (!inputText.trim()) return;
         if (!session?.user && isGuestLocked) return;
 
         const userMsg: Message = {
             id: Date.now().toString(),
             sender: 'user',
             text: inputText,
-            imageUrls: imagePreviews.length > 0 ? imagePreviews : undefined,
             timestamp: new Date(),
         };
 
         setMessages(prev => [...prev, userMsg]);
         setInputText('');
-        setImageFiles([]);
-        setImagePreviews([]);
         setIsTyping(true);
 
         try {
@@ -287,7 +221,7 @@ export default function ChatBot() {
                 ? [...readGuestTranscript(), { sender: 'user', text: userMsg.text }]
                 : [];
 
-            const chatPromise = fetch('/api/chat', {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -297,17 +231,7 @@ export default function ChatBot() {
                 }),
             });
 
-            const recPromise = fetch('/api/recommendations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: userMsg.text, imageUrls: userMsg.imageUrls }),
-            }).then(res => res.json()).catch(() => ({ recommendations: [] }));
-
-            const [chatResponse, recPayload] = await Promise.all([chatPromise, recPromise]);
-            const payload = await chatResponse.json();
-
-            const allProducts = [...(recPayload.recommendations || []), ...(payload.products || [])];
-            const uniqueProducts = Array.from(new Map(allProducts.map((p: { _id?: string; id?: string }) => [p._id || p.id, p])).values()).slice(0, 4);
+            const payload = await response.json();
 
             const botResponse: Message = {
                 id: (Date.now() + 1).toString(),
@@ -315,7 +239,7 @@ export default function ChatBot() {
                 text: payload.reply || payload.error || 'I could not generate a response right now.',
                 timestamp: new Date(),
                 suggestions: Array.isArray(payload.suggestions) ? payload.suggestions : [],
-                products: uniqueProducts as ProductRecommendation[],
+                products: Array.isArray(payload.products) ? payload.products : [],
             };
 
             setMessages(prev => [...prev, botResponse]);
@@ -420,20 +344,6 @@ export default function ChatBot() {
                                     : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
                                 }`}>
                                 <RichMessage text={msg.text} />
-                                {msg.imageUrl && !msg.imageUrls && (
-                                    <div className="mt-3 relative w-32 h-32 rounded-lg overflow-hidden border border-neutral-200">
-                                        <Image src={msg.imageUrl} alt="Uploaded" fill className="object-cover" />
-                                    </div>
-                                )}
-                                {msg.imageUrls && msg.imageUrls.length > 0 && (
-                                    <div className="mt-3 flex gap-2 flex-wrap">
-                                        {msg.imageUrls.map((url, i) => (
-                                            <div key={i} className="relative w-32 h-32 rounded-lg overflow-hidden border border-neutral-200 shadow-sm">
-                                                <Image src={url} alt={`Uploaded ${i+1}`} fill className="object-cover" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
                                 {msg.products && msg.products.length > 0 && (
                                     <div className="mt-4 space-y-2">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Recommended Products</p>
@@ -553,57 +463,20 @@ export default function ChatBot() {
             </div>
 
             {/* Input */}
-            <div className="flex flex-col bg-white border-t border-gray-100">
-                {imagePreviews.length > 0 && (
-                    <div className="px-4 py-3 flex flex-wrap gap-3 bg-gray-50 border-b border-gray-100 items-center">
-                        {imagePreviews.map((preview, i) => (
-                            <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 shadow-sm group">
-                                <Image src={preview} alt={`Preview ${i+1}`} fill className="object-cover" />
-                                <button 
-                                    onClick={() => removeImage(i)} 
-                                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black"
-                                >
-                                    &times;
-                                </button>
-                            </div>
-                        ))}
-                        {imagePreviews.length < 3 && (
-                            <div className="text-[10px] text-gray-400 font-medium ml-2">
-                                {3 - imagePreviews.length} more allowed
-                            </div>
-                        )}
-                    </div>
-                )}
-                <div className="p-4 flex gap-2">
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImageChange}
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                    />
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isGuestLocked || isGuestEnded}
-                        className="p-3 bg-gray-50 text-gray-500 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Attach an image"
-                    >
-                        <Paperclip className="w-5 h-5" />
-                    </button>
+            <div className="p-4 bg-white border-t border-gray-100">
+                <div className="flex gap-2">
                     <input
                         type="text"
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyDown={handleKeyPress}
-                        onPaste={handlePaste}
-                        placeholder={isGuestLocked || isGuestEnded ? "Sign in to keep chatting..." : "Type your fashion question or paste images..."}
+                        placeholder={isGuestLocked || isGuestEnded ? "Sign in to keep chatting..." : "Type your fashion question..."}
                         disabled={isGuestLocked || isGuestEnded}
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-black focus:ring-1 focus:ring-black transition-all disabled:cursor-not-allowed disabled:opacity-60"
                     />
                     <button
                         onClick={handleSend}
-                        disabled={(!inputText.trim() && imageFiles.length === 0) || isGuestLocked || isGuestEnded}
+                        disabled={!inputText.trim() || isGuestLocked || isGuestEnded}
                         className="bg-black text-white p-3 rounded-xl hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Send className="w-5 h-5" />

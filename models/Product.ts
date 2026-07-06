@@ -19,14 +19,6 @@ const productSchema = new Schema({
   arrivalDate: { type: String },
   gender: { type: String, index: true },
   collectionType: { type: String, index: true },
-  imageEmbedding: { type: [Number] },
-  metadata: {
-    category: String,
-    color: String,
-    gender: String,
-    occasion: String,
-    price: Number,
-  },
 }, { timestamps: true });
 
 export const Product = models.Product || model('Product', productSchema, 'products');
