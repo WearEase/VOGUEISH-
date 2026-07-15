@@ -9,7 +9,6 @@ import {
   CheckCircle2, ChevronRight, LogOut, Mail, Phone, User as UserIcon, 
   Scissors, Gift, Calendar, Shield, AlertCircle
 } from "lucide-react";
-import { demoOrders } from "@/data/orders";
 import { toast } from "sonner";
 
 const formatMaybe = (value: string | null | undefined) => (value && value.trim().length > 0 ? value : "—");
