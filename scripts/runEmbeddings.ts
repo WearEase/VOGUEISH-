@@ -90,12 +90,12 @@ async function run() {
           // 1. Image embedding (visual appearance)
           console.log(`     Encoding image...`);
           const imgEmb = await encodeImage(product.mainImage);
-          await new Promise(r => setTimeout(r, 1000)); // 1s pause between Jina calls
+          await new Promise(r => setTimeout(r, 35000)); // 35s pause to prevent rate limit
 
           // 2. Text embedding (semantic category/name)
           console.log(`     Encoding text...`);
           const txtEmb = await encodeText(productText);
-          await new Promise(r => setTimeout(r, 1000));
+          await new Promise(r => setTimeout(r, 35000)); // 35s pause to prevent rate limit
 
           // 3. Fuse: 60% image + 40% text, both L2-normalised
           const fused = fuseEmbeddings(imgEmb, txtEmb);

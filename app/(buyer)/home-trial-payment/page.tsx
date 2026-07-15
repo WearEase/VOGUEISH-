@@ -160,7 +160,7 @@ export default function HomeTrialPaymentPage() {
           Back to Address
         </Link>
 
-        <h1 className="text-3xl font-serif text-center mb-8">Home Trial Service Charge Payment</h1>
+        <h1 className="text-3xl font-serif text-center mb-8">Ship Out</h1>
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Left: Summary */}
