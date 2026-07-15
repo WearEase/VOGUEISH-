@@ -98,10 +98,7 @@ export default function CartPage() {
           <p className="text-sm text-gray-700 mt-3">
             Experience our outfits in the comfort of your home. Return what doesn&apos;t fit perfectly.
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full">Free service</span>
-            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full">3-day trial</span>
-          </div>
+
         </div>
         <ToggleSwitch
           enabled={homeTrial}

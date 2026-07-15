@@ -9,7 +9,6 @@ import {
   CheckCircle2, ChevronRight, LogOut, Mail, Phone, User as UserIcon, 
   Scissors, Gift, Calendar, Shield, AlertCircle
 } from "lucide-react";
-import { demoOrders } from "@/data/orders";
 import { toast } from "sonner";
 
 const formatMaybe = (value: string | null | undefined) => (value && value.trim().length > 0 ? value : "—");
@@ -161,47 +160,11 @@ export default function MyAccountPage() {
   }, [isAuthed, session, localUser]);
 
   const initTrials = () => {
-    const initialTrials: HomeTrial[] = [
-      {
-        id: "HT-8402",
-        placedAt: "08 Jun 2026",
-        status: "Delivered",
-        vendorStatus: "Vendor at Door - Awaiting Arrival Verification",
-        otpVerified: false,
-        items: [
-          { name: "Product 1", brand: "Loro Piana", size: "L", price: 4689 },
-          { name: "Product 6", brand: "Nike", size: "L", price: 3499 }
-        ]
-      },
-      {
-        id: "HT-2931",
-        placedAt: "02 Jun 2026",
-        status: "Completed",
-        vendorStatus: "Completed - Tailoring Allowed",
-        otpVerified: true,
-        items: [
-          { name: "Product 2", brand: "Zegna", size: "XL", price: 6299 }
-        ]
-      }
-    ];
-    setHomeTrials(initialTrials);
-    localStorage.setItem("profileHomeTrials", JSON.stringify(initialTrials));
+    setHomeTrials([]);
   };
 
   const initDonations = () => {
-    const initialDonations: Donation[] = [
-      {
-        id: "#VOG-DON-84729",
-        ngoName: "Goonj NGO",
-        pickupDate: "15 Jun 2026",
-        timeSlot: "2:00–4:00 PM",
-        itemType: "Formal Wear (5 Items)",
-        status: "Pickup Scheduled",
-        linkedTrialId: "HT-2931"
-      }
-    ];
-    setDonations(initialDonations);
-    localStorage.setItem("profileDonations", JSON.stringify(initialDonations));
+    setDonations([]);
   };
 
   const initWishlist = () => {
@@ -510,44 +473,9 @@ export default function MyAccountPage() {
               </div>
 
               <div className="divide-y divide-gray-100">
-                {demoOrders.map((order) => (
-                  <div key={order.id} className="p-6 sm:p-8 flex flex-col gap-5">
-                    <div className="flex items-start justify-between gap-4 flex-wrap">
-                      <div>
-                        <p className="text-xs text-gray-400 font-medium">{order.placedAt}</p>
-                        <h3 className="mt-0.5 text-base font-semibold text-gray-900">{order.id}</h3>
-                        <p className="mt-0.5 text-xs text-gray-500">
-                          {order.totalItems} item{order.totalItems > 1 ? "s" : ""} • ₹{order.totalAmount.toLocaleString()}
-                        </p>
-                      </div>
-                      <span className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700">
-                        {order.status}
-                      </span>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {order.items.map((item) => (
-                        <div key={`${order.id}-${item.name}`} className="rounded-2xl border border-gray-100 p-4 bg-zinc-50/20">
-                          <p className="font-semibold text-sm text-gray-900">{item.name}</p>
-                          <p className="text-xs text-gray-500">{item.brand}</p>
-                          <p className="mt-2 text-xs text-gray-600">
-                            Size: <span className="font-medium text-gray-900">{item.size}</span>
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-wrap gap-3">
-                      <Link
-                        href={order.trackingHref}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-black text-white text-xs hover:bg-zinc-800 transition font-medium"
-                      >
-                        Track order
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+                <div className="p-8 text-center text-gray-500 text-sm">
+                  No orders found. Check out our store to buy new items!
+                </div>
               </div>
             </section>
 

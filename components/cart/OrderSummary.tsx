@@ -110,10 +110,7 @@ export default function OrderSummary({
             <Shield className="w-4 h-4 text-green-500" />
             <span>Secure 256-bit SSL encryption</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-blue-500" />
-            <span>Free returns within 30 days</span>
-          </div>
+
         </div>
       </div>
     </div>
