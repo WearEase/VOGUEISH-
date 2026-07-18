@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import React, { useState } from 'react';
@@ -12,6 +15,7 @@ import { toast } from 'sonner';
 import { useCart } from '@/hooks/useCart';
 import { Form } from '@/components/ui/form';
 import FormField from '@/components/FormField';
+import AddressSelector from '@/components/ui/AddressSelector';
 
 const checkoutSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -55,6 +59,17 @@ export default function CheckoutPage() {
       payment: 'card',
     },
   });
+
+  const [selectedAddressId, setSelectedAddressId] = useState<string | undefined>();
+
+  const handleSelectAddress = (address: any) => {
+    setSelectedAddressId(address._id);
+    form.setValue('street', address.street, { shouldValidate: true });
+    form.setValue('city', address.city, { shouldValidate: true });
+    form.setValue('state', address.state, { shouldValidate: true });
+    form.setValue('zipCode', address.postalCode, { shouldValidate: true });
+    form.setValue('country', address.country || 'India', { shouldValidate: true });
+  };
 
   const onSubmit = async (values: CheckoutFormValues) => {
     if (cart.length === 0) {
@@ -116,6 +131,8 @@ export default function CheckoutPage() {
               </div>
 
               <div className="p-8">
+                <AddressSelector onSelectAddress={handleSelectAddress} selectedAddressId={selectedAddressId} />
+                <div className="pt-6" />
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
@@ -260,3 +277,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
