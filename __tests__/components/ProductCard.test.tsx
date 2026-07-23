@@ -35,13 +35,13 @@ describe('ProductCard Component', () => {
   });
 
   it('renders product details correctly', () => {
-    render(<ProductCard product={mockProduct as any} />);
+    render(<ProductCard product={mockProduct as any} isInWishlist={false} onToggleWishlist={vi.fn()} />);
     expect(screen.getByText('Test Product')).toBeInTheDocument();
     expect(screen.getByText('Test Brand')).toBeInTheDocument();
   });
 
   it('toggles the size selection popup when cart icon is clicked', () => {
-    render(<ProductCard product={mockProduct as any} />);
+    render(<ProductCard product={mockProduct as any} isInWishlist={false} onToggleWishlist={vi.fn()} />);
     
     // Popup should not be visible initially
     expect(screen.queryByText('Select Size:')).not.toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('ProductCard Component', () => {
   });
 
   it('calls addToCart with selected size when a size is clicked', () => {
-    render(<ProductCard product={mockProduct as any} />);
+    render(<ProductCard product={mockProduct as any} isInWishlist={false} onToggleWishlist={vi.fn()} />);
     
     // Open popup
     fireEvent.click(screen.getByRole('button', { name: /add to cart/i }));
