@@ -216,7 +216,7 @@ export default function MyAccountPage() {
       phone: (localUser as any)?.phone || "",
       region: (localUser as any)?.region || "",
     } as { name: string; email: string; phone?: string; region?: string; };
-  }, [localUser?.email, localUser?.name, session?.user?.email, session?.user?.name]);
+  }, [localUser, session?.user?.email, session?.user?.name]);
 
   if (status === "loading") {
     return (
