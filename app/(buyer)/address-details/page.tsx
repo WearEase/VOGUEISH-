@@ -103,7 +103,6 @@ export default function AddressDetailsPage() {
                                     <input
                                         {...register('fullName')}
                                         className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
-                                        placeholder="e.g. Jane Doe"
                                     />
                                     {errors.fullName && <p className="text-xs text-red-500">{errors.fullName.message}</p>}
                                 </div>
@@ -112,7 +111,6 @@ export default function AddressDetailsPage() {
                                     <input
                                         {...register('phone')}
                                         className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
-                                        placeholder="e.g. 9876543210"
                                     />
                                     {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
                                 </div>

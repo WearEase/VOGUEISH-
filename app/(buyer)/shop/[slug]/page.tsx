@@ -7,6 +7,7 @@ import { Product, TabType } from '@/types/product';
 import { Cormorant_Garamond } from 'next/font/google';
 import { ShoppingCart, Heart, Star, Truck, Shield, RotateCcw, Home, X, Ruler } from 'lucide-react';
 import { useHomeTrial } from '@/context/HomeTrialContext';
+import { useCart } from '@/hooks/useCart';
 import { toast } from 'sonner';
 
 const cormorant = Cormorant_Garamond({
@@ -27,7 +28,6 @@ interface CartItem {
   slug: string;
   inStock: boolean;
 }
-
 interface WishlistItem {
   id: string;
   name: string;
@@ -41,6 +41,7 @@ export default function ProductPage() {
   const { slug } = useParams();
   const router = useRouter();
   const { addToHomeTrial, trialItems } = useHomeTrial();
+  const { cart, addToCart: hookAddToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,7 +50,6 @@ export default function ProductPage() {
   const [activeTab, setActiveTab] = useState<TabType>('description');
   const [quantity, setQuantity] = useState(1);
   const [isInWishlist, setIsInWishlist] = useState(false);
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [showAddedToCart, setShowAddedToCart] = useState(false);
   const [didHydrateStorage, setDidHydrateStorage] = useState(false);
@@ -93,20 +93,11 @@ export default function ProductPage() {
     }
   }, [images]);
 
-  // Load cart and wishlist from localStorage on component mount
+  // Load wishlist from localStorage on component mount
   useEffect(() => {
     if (!product) return;
     setDidHydrateStorage(false);
-    const savedCart = localStorage.getItem('ecommerce-cart');
     const savedWishlist = localStorage.getItem('ecommerce-wishlist');
-
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch {
-        setCart([]);
-      }
-    }
 
     if (savedWishlist) {
       try {
@@ -122,13 +113,6 @@ export default function ProductPage() {
     setDidHydrateStorage(true);
   }, [slug, product]);
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    if (!didHydrateStorage) return;
-    localStorage.setItem('ecommerce-cart', JSON.stringify(cart));
-    window.dispatchEvent(new Event('ecommerce-cart-updated'));
-  }, [cart, didHydrateStorage]);
-
   // Save wishlist to localStorage whenever it changes
   useEffect(() => {
     if (!didHydrateStorage) return;
@@ -142,36 +126,7 @@ export default function ProductPage() {
       return;
     }
 
-    const cartItemId = `${product.slug}-${selectedSize}`;
-    const numericPrice = typeof product.discountedPrice === 'string'
-      ? Number(product.discountedPrice.replace(/[^0-9.]/g, ''))
-      : product.discountedPrice;
-
-    setCart((prev) => {
-      const existingItemIndex = prev.findIndex((item) => item.id === cartItemId);
-      if (existingItemIndex > -1) {
-        const updatedCart = [...prev];
-        updatedCart[existingItemIndex] = {
-          ...updatedCart[existingItemIndex],
-          quantity: updatedCart[existingItemIndex].quantity + quantity,
-        };
-        return updatedCart;
-      }
-
-      const newCartItem: CartItem = {
-        id: cartItemId,
-        productId: product.id,
-        name: product.name,
-        brand: product.brand,
-        realPrice: Number.isFinite(numericPrice) ? Number(numericPrice) : 0,
-        size: selectedSize,
-        quantity,
-        image: product.mainImage,
-        slug: product.slug,
-        inStock: true,
-      };
-      return [...prev, newCartItem];
-    });
+    hookAddToCart(product, selectedSize, quantity);
 
     toast.success('Added to cart! Redirecting...');
     setShowAddedToCart(true);

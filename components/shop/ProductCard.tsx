@@ -1,7 +1,9 @@
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { useCart } from "@/hooks/useCart";
 
 import type { Product } from "@/types/product";
 import type { CartItem } from "@/types/cart";
@@ -26,50 +28,6 @@ const formatINR = (value: number | string | undefined) => {
   return new Intl.NumberFormat('en-IN').format(numeric);
 };
 
-const getDefaultSize = (product: Product): string => {
-  const sizes = Array.isArray(product.sizesAvailable) ? product.sizesAvailable : [];
-  return sizes.length > 0 ? String(sizes[0]) : 'M';
-};
-
-const addProductToCartStorage = (product: Product) => {
-  const size = getDefaultSize(product);
-  const cartItemId = `${product.slug}-${size}`;
-
-  try {
-    const raw = localStorage.getItem('ecommerce-cart') || '[]';
-    const existing = JSON.parse(raw) as unknown;
-    const cart: CartItem[] = Array.isArray(existing) ? (existing as CartItem[]) : [];
-
-    const idx = cart.findIndex((item) => item.id === cartItemId);
-    if (idx > -1) {
-      const current = cart[idx];
-      const nextQty = (typeof current.quantity === 'number' ? current.quantity : 1) + 1;
-      cart[idx] = { ...current, quantity: nextQty };
-    } else {
-      const numericPrice = parsePrice(product.discountedPrice);
-      const newItem: CartItem = {
-        id: cartItemId,
-        productId: product.id,
-        name: product.name,
-        brand: product.brand,
-        size,
-        realPrice: numericPrice,
-        quantity: 1,
-        image: product.mainImage,
-        slug: product.slug,
-        inStock: true,
-      };
-      cart.push(newItem);
-    }
-
-    localStorage.setItem('ecommerce-cart', JSON.stringify(cart));
-    window.dispatchEvent(new Event('ecommerce-cart-updated'));
-    toast.success('Added to cart');
-  } catch {
-    toast.error('Could not update cart');
-  }
-};
-
 export default function ProductCard({ 
   product, 
   viewMode = 'grid', 
@@ -77,6 +35,37 @@ export default function ProductCard({
   onToggleWishlist,
   showDescription = false 
 }: ProductCardProps) {
+  const { addToCart } = useCart();
+  const [showSizePopup, setShowSizePopup] = useState(false);
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        setShowSizePopup(false);
+      }
+    };
+    if (showSizePopup) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSizePopup]);
+
+  const handleAddToCartClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (product.sizesAvailable && product.sizesAvailable.length > 0) {
+      setShowSizePopup(!showSizePopup);
+    } else {
+      addToCart(product);
+    }
+  };
+
+  const handleSizeSelect = (e: React.MouseEvent, size: string) => {
+    e.preventDefault();
+    addToCart(product, size);
+    setShowSizePopup(false);
+  };
+
   const real = parsePrice(product.realPrice);
   const discounted = parsePrice(product.discountedPrice);
   const discountPercentage = real > discounted 
@@ -138,16 +127,34 @@ export default function ProductCard({
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => addProductToCartStorage(product)}
-                className="p-3 rounded-full transition-all duration-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
-                aria-label="Add to cart"
-                title="Add to cart"
-              >
-                <ShoppingBag className="w-5 h-5" />
-              </button>
+            <div className="flex items-center gap-2" ref={popupRef}>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleAddToCartClick}
+                  className="p-3 rounded-full transition-all duration-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
+                  aria-label="Add to cart"
+                  title="Add to cart"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                </button>
+                {showSizePopup && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-xl border border-gray-100 p-2 z-50 min-w-[120px]">
+                    <p className="text-xs text-gray-500 font-semibold mb-2 px-1">Select Size:</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {product.sizesAvailable?.map(size => (
+                        <button
+                          key={size}
+                          onClick={(e) => handleSizeSelect(e, String(size))}
+                          className="py-1 px-2 text-sm font-medium rounded bg-gray-50 border border-gray-100 hover:bg-black hover:text-white hover:border-black transition-colors"
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => onToggleWishlist(product)}
@@ -196,16 +203,34 @@ export default function ProductCard({
         </div>
       </Link>
       
-      <div className="absolute top-3 right-3 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => addProductToCartStorage(product)}
-          className="p-2.5 rounded-full shadow-lg bg-white/80 text-gray-700 hover:bg-white transition-all duration-200"
-          aria-label="Add to cart"
-          title="Add to cart"
-        >
-          <ShoppingBag className="w-4 h-4" />
-        </button>
+      <div className="absolute top-3 right-3 flex items-center gap-2" ref={popupRef}>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={handleAddToCartClick}
+            className="p-2.5 rounded-full shadow-lg bg-white/80 text-gray-700 hover:bg-white transition-all duration-200"
+            aria-label="Add to cart"
+            title="Add to cart"
+          >
+            <ShoppingBag className="w-4 h-4" />
+          </button>
+          {showSizePopup && (
+            <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 p-2 z-50 min-w-[120px]">
+              <p className="text-xs text-gray-500 font-semibold mb-2 px-1">Select Size:</p>
+              <div className="grid grid-cols-2 gap-1">
+                {product.sizesAvailable?.map(size => (
+                  <button
+                    key={size}
+                    onClick={(e) => handleSizeSelect(e, String(size))}
+                    className="py-1 px-2 text-sm font-medium rounded bg-gray-50 border border-gray-100 hover:bg-black hover:text-white hover:border-black transition-colors"
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => onToggleWishlist(product)}

@@ -7,7 +7,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { 
   CheckCircle2, ChevronRight, LogOut, Mail, Phone, User as UserIcon, 
-  Scissors, Gift, Calendar, Shield, AlertCircle
+  Scissors, Gift, Calendar, Shield, AlertCircle, X
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -62,7 +62,7 @@ const readLocalUser = (): LocalUser | null => {
 export default function MyAccountPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [localUser] = useState<LocalUser | null>(() => readLocalUser());
+  const [localUser, setLocalUser] = useState<LocalUser | null>(() => readLocalUser());
 
   // States for Home Trials & Donations
   const [homeTrials, setHomeTrials] = useState<HomeTrial[]>([]);
@@ -81,6 +81,15 @@ export default function MyAccountPage() {
 
   // Selection state for completed trial checkout
   const [selectedTrialItems, setSelectedTrialItems] = useState<Record<string, string[]>>({});
+
+  // Profile Edit state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editProfileForm, setEditProfileForm] = useState({ name: "", email: "", phone: "", region: "India Hub", photo: "" });
+
+  // Cancellation state
+  const [cancellingTrialId, setCancellingTrialId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelRating, setCancelRating] = useState(0);
 
   const toggleItemSelection = (trialId: string, itemName: string) => {
     setSelectedTrialItems(prev => {
@@ -204,7 +213,9 @@ export default function MyAccountPage() {
     return {
       name,
       email,
-    };
+      phone: (localUser as any)?.phone || "",
+      region: (localUser as any)?.region || "",
+    } as { name: string; email: string; phone?: string; region?: string; };
   }, [localUser?.email, localUser?.name, session?.user?.email, session?.user?.name]);
 
   if (status === "loading") {
@@ -398,6 +409,15 @@ export default function MyAccountPage() {
                         {formatMaybe(profile.name) as string}
                       </h2>
                       <CheckCircle2 className="w-5 h-5 text-green-600 fill-green-50" />
+                      <button 
+                        onClick={() => {
+                          setEditProfileForm({ ...editProfileForm, name: profile.name, email: profile.email, phone: profile.phone || "", region: profile.region || "India Hub" });
+                          setIsEditingProfile(true);
+                        }}
+                        className="ml-auto text-sm font-semibold text-blue-600 hover:text-blue-800 transition px-3 py-1 bg-blue-50 hover:bg-blue-100 rounded-lg"
+                      >
+                        Edit Profile
+                      </button>
                     </div>
                     <p className="text-gray-500 mt-1 text-sm">Welcome back to Vogueish.</p>
 
@@ -420,13 +440,17 @@ export default function MyAccountPage() {
                     <span>Standard Buyer</span>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-gray-100 p-3 bg-zinc-50/50">
-                      <p className="text-[10px] uppercase font-bold text-gray-400">Status</p>
-                      <p className="mt-1 text-xs font-semibold text-gray-900">Active</p>
+                    <div className="rounded-2xl border border-gray-100 p-3 bg-zinc-50/50 flex flex-col justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-gray-400">Status</p>
+                        <p className="mt-1 text-xs font-semibold text-gray-900">Active</p>
+                      </div>
                     </div>
-                    <div className="rounded-2xl border border-gray-100 p-3 bg-zinc-50/50">
-                      <p className="text-[10px] uppercase font-bold text-gray-400">Region</p>
-                      <p className="mt-1 text-xs font-semibold text-gray-900">India Hub</p>
+                    <div className="rounded-2xl border border-gray-100 p-3 bg-zinc-50/50 flex flex-col justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-gray-400">Region</p>
+                        <p className="mt-1 text-xs font-semibold text-gray-900">{profile.region || "India Hub"}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -470,11 +494,18 @@ export default function MyAccountPage() {
                     View and track your standard purchases. Cloth alterations are exclusively offered for Home Trial products.
                   </p>
                 </div>
+                <Link
+                  href="/my-orders"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition"
+                >
+                  View All Orders
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
 
               <div className="divide-y divide-gray-100">
                 <div className="p-8 text-center text-gray-500 text-sm">
-                  No orders found. Check out our store to buy new items!
+                  Track all your past and current purchases from the dedicated Orders page.
                 </div>
               </div>
             </section>
@@ -507,13 +538,23 @@ export default function MyAccountPage() {
                             Status: <span className="text-zinc-850 font-bold">{trial.vendorStatus}</span>
                           </p>
                         </div>
-                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                          trial.status === "Completed"
-                            ? "bg-green-50 text-green-700 border border-green-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
-                        }`}>
-                          {trial.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                            trial.status === "Completed"
+                              ? "bg-green-50 text-green-700 border border-green-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
+                          }`}>
+                            {trial.status}
+                          </span>
+                          {trial.status !== "Completed" && trial.status !== "Cancelled" && (
+                            <button
+                              onClick={() => setCancellingTrialId(trial.id)}
+                              className="text-xs text-red-600 hover:text-red-700 underline font-medium"
+                            >
+                              Cancel Trial
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {/* Products inside Home Trial */}
@@ -830,6 +871,140 @@ export default function MyAccountPage() {
             </section>
           </div>
         )}
+
+      {/* --- Profile Edit Modal --- */}
+      {isEditingProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-serif text-xl text-gray-900">Edit Profile</h3>
+              <button onClick={() => setIsEditingProfile(false)} className="text-gray-400 hover:text-black transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const updatedUser = { 
+                ...localUser, 
+                name: editProfileForm.name, 
+                email: editProfileForm.email,
+                phone: editProfileForm.phone,
+                region: editProfileForm.region
+              };
+              setLocalUser(updatedUser);
+              localStorage.setItem("user", JSON.stringify(updatedUser));
+              
+              toast.success("Profile updated successfully!");
+              setIsEditingProfile(false);
+            }} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={editProfileForm.name}
+                  onChange={e => setEditProfileForm({...editProfileForm, name: e.target.value})}
+                  className="w-full rounded-lg border-gray-300 py-2.5 px-3 text-sm focus:border-black focus:ring-black"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={editProfileForm.email}
+                  onChange={e => setEditProfileForm({...editProfileForm, email: e.target.value})}
+                  className="w-full rounded-lg border-gray-300 py-2.5 px-3 text-sm focus:border-black focus:ring-black"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={editProfileForm.phone}
+                  onChange={e => setEditProfileForm({...editProfileForm, phone: e.target.value})}
+                  className="w-full rounded-lg border-gray-300 py-2.5 px-3 text-sm focus:border-black focus:ring-black"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Region</label>
+                <input
+                  type="text"
+                  value={editProfileForm.region}
+                  onChange={e => setEditProfileForm({...editProfileForm, region: e.target.value})}
+                  className="w-full rounded-lg border-gray-300 py-2.5 px-3 text-sm focus:border-black focus:ring-black"
+                />
+              </div>
+              <button type="submit" className="w-full py-3 mt-4 bg-black text-white rounded-xl text-sm font-semibold hover:bg-gray-900 transition">
+                Save Changes
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- Cancel Home Trial Modal --- */}
+      {cancellingTrialId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-serif text-xl text-gray-900">Cancel Home Trial</h3>
+              <button onClick={() => setCancellingTrialId(null)} className="text-gray-400 hover:text-black transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              // Update status to Cancelled
+              const updatedTrials = homeTrials.map(t => 
+                t.id === cancellingTrialId ? { ...t, status: "Cancelled", vendorStatus: "Cancelled by User" } : t
+              );
+              updateHomeTrialsLocal(updatedTrials);
+              setCancellingTrialId(null);
+              setCancelReason("");
+              setCancelRating(0);
+              toast.success("Home trial cancelled successfully.");
+            }} className="p-6">
+              <p className="text-sm text-gray-600 mb-5">We&apos;re sorry to see you cancel this trial. Could you tell us why?</p>
+              
+              <div className="mb-5">
+                <label className="block text-xs font-semibold text-gray-700 mb-2">How was your experience booking this trial? (Optional)</label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setCancelRating(star)}
+                      className={`text-2xl transition ${cancelRating >= star ? "text-yellow-400" : "text-gray-200 hover:text-yellow-200"}`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-5">
+                <label className="block text-xs font-semibold text-gray-700 mb-2">Reason for cancellation (Optional)</label>
+                <textarea
+                  value={cancelReason}
+                  onChange={e => setCancelReason(e.target.value)}
+                  placeholder="Tell us what went wrong..."
+                  className="w-full rounded-lg border-gray-300 py-3 px-3 text-sm focus:border-black focus:ring-black resize-none h-24"
+                ></textarea>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setCancellingTrialId(null)} className="flex-1 py-3 bg-gray-100 text-gray-900 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">
+                  Keep Trial
+                </button>
+                <button type="submit" className="flex-1 py-3 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition">
+                  Confirm Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

@@ -6,13 +6,15 @@ import { ShoppingBag, User, Menu, X, Sun, Moon } from "lucide-react";
 import { useHomeTrial } from "@/context/HomeTrialContext";
 import { useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
+import { useCart } from "@/hooks/useCart";
 
 // We can pass auth state as prop if needed, or use AuthContext if available
 // For now, mirroring existing Navbar structure but observing contexts
 
 export default function NavbarIcons() {
   const { itemCount: trialCount } = useHomeTrial();
-  const [cartCount, setCartCount] = useState(0);
+  const { cart } = useCart();
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const { status } = useSession();
   const [hasLocalUser, setHasLocalUser] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,44 +38,6 @@ export default function NavbarIcons() {
       ? quantity
       : 1;
   };
-
-  // Load cart count akin to logic in Navbar
-  useEffect(() => {
-    const loadCart = () => {
-      try {
-        const cart = localStorage.getItem("ecommerce-cart");
-        if (cart) {
-          const cartItems = JSON.parse(cart);
-          const count = Array.isArray(cartItems)
-            ? cartItems.reduce(
-                (acc: number, item: unknown) => acc + getQuantity(item),
-                0,
-              )
-            : 0;
-          setCartCount(count);
-        } else {
-          setCartCount(0);
-        }
-      } catch (error) {
-        console.error("Failed to parse cart", error);
-      }
-    };
-
-    loadCart();
-
-    const onStorageChange = (e: StorageEvent) => {
-      if (e.key === "ecommerce-cart") loadCart();
-    };
-
-    const onCartUpdated = () => loadCart();
-
-    window.addEventListener("storage", onStorageChange);
-    window.addEventListener("ecommerce-cart-updated", onCartUpdated);
-    return () => {
-      window.removeEventListener("storage", onStorageChange);
-      window.removeEventListener("ecommerce-cart-updated", onCartUpdated);
-    };
-  }, []);
 
   useEffect(() => {
     try {

@@ -10,7 +10,17 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { ArrowLeft, CreditCard, MapPin } from 'lucide-react';
+
+const parseNumericPrice = (val: any): number => {
+  if (typeof val === 'number' && !isNaN(val)) return val;
+  if (typeof val === 'string') {
+    const parsed = parseFloat(val.replace(/[^\d.-]/g, ''));
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+};
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 import { useCart } from '@/hooks/useCart';
 import { Form } from '@/components/ui/form';
@@ -34,6 +44,20 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 export default function CheckoutPage() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const { data: session } = useSession();
+  const [localUserEmail, setLocalUserEmail] = useState('');
+  React.useEffect(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user?.email) {
+        setLocalUserEmail(user.email);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+
 
   const {
     cart,
@@ -46,6 +70,17 @@ export default function CheckoutPage() {
     discount,
   } = useCart();
 
+  // Sync cart to MongoDB on mount for cross-device sync
+  React.useEffect(() => {
+    if (session?.user?.email && cart.length > 0) {
+      fetch('/api/cart/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cartData: JSON.stringify(cart) }),
+      }).catch(err => console.error('Failed to sync cart on checkout', err));
+    }
+  }, [session?.user?.email, cart.length]); // Only sync when cart length changes or user loads
+
   const subtotal = getSubtotal();
   const shippingFee = getShippingFee();
   const tax = getTax();
@@ -55,6 +90,13 @@ export default function CheckoutPage() {
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
+      firstName: '',
+      lastName: '',
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      phone: '',
       country: 'India',
       payment: 'card',
     },
@@ -81,14 +123,165 @@ export default function CheckoutPage() {
     setIsProcessing(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    // In a real app you would send `values` + cart to the backend.
-    console.log('Checkout:', { values, cart });
+    const email = session?.user?.email || localUserEmail || "buyer@vogueish.com";
+    const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    clearCart();
-    toast.success('Order placed successfully!');
-    router.push('/otp?next=/thank-you');
+    const orderPayload = {
+      id: orderId,
+      userEmail: email,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      phone: values.phone,
+      shippingAddress: {
+        street: values.street,
+        city: values.city,
+        state: values.state,
+        zipCode: values.zipCode,
+        country: values.country,
+      },
+      items: cart.map(item => ({
+        productId: String(item.id || item.productId || (item as any)._id || Math.random().toString()),
+        name: String(item.name || (item as any).title || 'Unknown Product'),
+        brand: String(item.brand || 'Vogueish'),
+        price: parseNumericPrice(item.realPrice || (item as any).price || (item as any).discountedPrice),
+        quantity: Number(item.quantity) || 1,
+        size: String((item as any).selectedSize || item.size || 'M'),
+        image: String(item.image || (item as any).mainImage || ''),
+      })),
+      subtotal,
+      shippingFee,
+      tax,
+      discount,
+      totalAmount: total,
+      paymentMethod: values.payment,
+    };
 
-    setIsProcessing(false);
+    const placeOrder = async (finalPayload: any) => {
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(finalPayload),
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to create order');
+        }
+
+        clearCart();
+        toast.success('Order placed successfully!');
+        router.push('/otp?next=/thank-you');
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to place order. Please try again.');
+        setIsProcessing(false);
+      }
+    };
+
+    if (values.payment === 'cod' || (values.payment as string) === 'skip_razorpay') {
+      await placeOrder(orderPayload);
+    } else {
+      // Razorpay Flow
+      try {
+        const loadScript = () => {
+          return new Promise((resolve) => {
+            if ((window as any).Razorpay) {
+              resolve(true);
+              return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+        };
+
+        const res = await loadScript();
+        if (!res) {
+          toast.error('Razorpay SDK failed to load. Are you online?');
+          setIsProcessing(false);
+          return;
+        }
+
+        // 1. Create order on server
+        const createRes = await fetch('/api/razorpay/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: total }),
+        });
+        
+        const orderData = await createRes.json();
+        
+        if (!createRes.ok || !orderData.orderId) {
+          toast.error(orderData.error || 'Failed to initialize payment');
+          setIsProcessing(false);
+          return;
+        }
+
+        // 2. Initialize Razorpay Checkout
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, 
+          amount: orderData.amount,
+          currency: "INR",
+          name: "Vogueish",
+          description: "Order Payment",
+          order_id: orderData.orderId,
+          handler: async function (response: any) {
+            // 3. Verify Payment
+            const verifyRes = await fetch('/api/razorpay/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.success) {
+              const finalPayload = {
+                ...orderPayload,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                paymentStatus: 'Paid',
+              };
+              await placeOrder(finalPayload);
+            } else {
+              toast.error('Payment verification failed!');
+              setIsProcessing(false);
+            }
+          },
+          prefill: {
+            name: `${values.firstName} ${values.lastName}`,
+            email: email,
+            contact: values.phone,
+          },
+          theme: {
+            color: "#000000",
+          },
+          modal: {
+            ondismiss: function() {
+              toast.error('Payment cancelled');
+              setIsProcessing(false);
+            }
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', function (response: any) {
+          toast.error(response.error.description || 'Payment failed');
+          setIsProcessing(false);
+        });
+        rzp.open();
+      } catch (err) {
+        console.error(err);
+        toast.error('Error initializing payment. Please try again.');
+        setIsProcessing(false);
+      }
+    }
   };
 
   if (cart.length === 0) {
@@ -140,13 +333,11 @@ export default function CheckoutPage() {
                         control={form.control}
                         name="firstName"
                         label="First Name"
-                        placeholder="e.g. Ravi"
                       />
                       <FormField
                         control={form.control}
                         name="lastName"
                         label="Last Name"
-                        placeholder="e.g. Kumar"
                       />
                     </div>
 
@@ -189,7 +380,6 @@ export default function CheckoutPage() {
                         control={form.control}
                         name="phone"
                         label="Phone"
-                        placeholder="e.g. 9876543210"
                       />
                     </div>
 
@@ -207,6 +397,7 @@ export default function CheckoutPage() {
                             { value: 'card' as const, label: 'Credit / Debit Card' },
                             { value: 'upi' as const, label: 'UPI / Wallet' },
                             { value: 'cod' as const, label: 'Cash on Delivery' },
+                            { value: 'skip_razorpay' as const, label: 'Skip Razorpay (Test Mode)' },
                           ] as const
                         ).map((method) => (
                           <label

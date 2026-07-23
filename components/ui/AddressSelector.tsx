@@ -106,11 +106,11 @@ export default function AddressSelector({ onSelectAddress, selectedAddressId }: 
       </div>
       
       <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
-        {addresses.map((address) => {
+        {addresses.map((address, index) => {
           const isSelected = selectedAddressId === address._id || (!selectedAddressId && addresses.indexOf(address) === 0);
           return (
             <div 
-              key={address._id}
+              key={address._id || index}
               onClick={() => onSelectAddress(address)}
               className={`min-w-[280px] cursor-pointer rounded-xl border-2 p-4 transition-all snap-start relative ${isSelected ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-300 bg-white'}`}
             >

@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AddressSelector from '../AddressSelector';
 import { useSession } from 'next-auth/react';
 
@@ -25,14 +26,20 @@ const mockAddresses = [
 ];
 
 describe('AddressSelector', () => {
-  const mockOnSelectAddress = jest.fn();
+  const mockOnSelectAddress = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (useSession as jest.Mock).mockReturnValue({
+    vi.clearAllMocks();
+    (useSession as any).mockReturnValue({
       data: { user: { email: 'test@example.com' } },
       status: 'authenticated',
     });
+    global.fetch = vi.fn(() => 
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ addresses: mockAddresses }),
+      })
+    ) as any;
   });
 
   it('renders loading state initially', () => {
@@ -50,12 +57,12 @@ describe('AddressSelector', () => {
   });
 
   it('fetches and displays addresses', async () => {
-    global.fetch = jest.fn(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ addresses: mockAddresses }),
       })
-    ) as jest.Mock;
+    ) as any;
 
     render(<AddressSelector onSelectAddress={mockOnSelectAddress} />);
     
@@ -71,12 +78,12 @@ describe('AddressSelector', () => {
   });
 
   it('opens add new address form when clicked', async () => {
-    global.fetch = jest.fn(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ addresses: [] }),
       })
-    ) as jest.Mock;
+    ) as any;
 
     render(<AddressSelector onSelectAddress={mockOnSelectAddress} />);
     

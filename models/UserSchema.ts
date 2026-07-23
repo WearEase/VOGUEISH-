@@ -66,6 +66,9 @@ const userSchema = new Schema({
     gender: String,
   },
 
+  // Cross-device Sync Fields
+  cartData: { type: String, default: '[]' },
+
   // Home Trial references — every booked trial's _id is pushed here
   homeTrials: [{ type: mongoose.Schema.Types.ObjectId, ref: 'HomeTrial' }],
 
