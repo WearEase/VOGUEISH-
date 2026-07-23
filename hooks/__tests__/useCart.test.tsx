@@ -51,12 +51,12 @@ describe('useCart Hook', () => {
     expect(result.current.cart[0].id).toBe('test-shirt-M');
     expect(result.current.cart[0].quantity).toBe(1);
     
-    // It should have dispatched an event
-    const savedCart = JSON.parse(localStorage.getItem('ecommerce-cart-guest') || '[]');
+    // It should have updated localStorage
+    const savedCart = JSON.parse(localStorage.getItem('ecommerce-cart') || '[]');
     expect(savedCart).toHaveLength(1);
   });
 
-  it('should correctly namespace the cart for logged-in users', () => {
+  it('should save to the unified ecommerce-cart for logged-in users', () => {
     // Mock user being logged in
     (useSession as any).mockReturnValue({
       data: { user: { email: 'user@example.com' } },
@@ -79,12 +79,8 @@ describe('useCart Hook', () => {
       result.current.addToCart(mockProduct, 'L', 1);
     });
 
-    // Expect it to save to the user's specific cart key
-    const savedUserCart = JSON.parse(localStorage.getItem('ecommerce-cart-user@example.com') || '[]');
-    expect(savedUserCart).toHaveLength(1);
-    
-    // Expect guest cart to be empty
-    const guestCart = localStorage.getItem('ecommerce-cart-guest');
-    expect(guestCart).toBeNull();
+    // Expect it to save to the unified cart key
+    const savedCart = JSON.parse(localStorage.getItem('ecommerce-cart') || '[]');
+    expect(savedCart).toHaveLength(1);
   });
 });

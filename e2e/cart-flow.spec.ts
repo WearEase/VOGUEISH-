@@ -14,13 +14,18 @@ test.describe('Cart Flow', () => {
     await expect(addToCartBtn).toBeVisible();
     await addToCartBtn.click();
 
-    // 4. Verify the success notification appeared
-    await expect(page.locator('text=Added to cart')).toBeVisible();
+    // 4. Select a size from the popup
+    const sizeBtn = page.locator('button', { hasText: 'M' }).first();
+    await expect(sizeBtn).toBeVisible();
+    await sizeBtn.click();
 
-    // 5. Navigate to Cart
+    // 5. Verify the success notification appeared
+    await expect(page.locator('text=/Added .* size of .* to cart/i')).toBeVisible();
+
+    // 6. Navigate to Cart
     await page.goto('/cart');
 
-    // 6. Verify the cart is not empty and shows the Shopping Cart summary
+    // 7. Verify the cart is not empty and shows the Shopping Cart summary
     await expect(page.locator('text=Shopping Cart')).toBeVisible();
     await expect(page.locator('text=Your cart is empty')).not.toBeVisible();
   });
