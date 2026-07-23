@@ -178,7 +178,7 @@ export default function CheckoutPage() {
       }
     };
 
-    if (values.payment === 'cod' || (values.payment as string) === 'skip_razorpay') {
+    if (values.payment === 'cod') {
       await placeOrder(orderPayload);
     } else {
       // Razorpay Flow
@@ -397,7 +397,6 @@ export default function CheckoutPage() {
                             { value: 'card' as const, label: 'Credit / Debit Card' },
                             { value: 'upi' as const, label: 'UPI / Wallet' },
                             { value: 'cod' as const, label: 'Cash on Delivery' },
-                            { value: 'skip_razorpay' as const, label: 'Skip Razorpay (Test Mode)' },
                           ] as const
                         ).map((method) => (
                           <label
