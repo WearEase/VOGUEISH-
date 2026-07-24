@@ -7,7 +7,6 @@ on:
 jobs:
   quality-checks:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -15,11 +14,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20" # Assuming standard Next.js requirement
+          node-version: "20"
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Run Linter
         run: npm run lint
@@ -27,15 +26,54 @@ jobs:
       - name: Type Check
         run: npx tsc --noEmit
 
-      - name: Build
+      - name: Security Audit
+        run: npm audit --audit-level=high
+
+      - name: Run Unit Tests
+        run: npm run test -- --run
+
+  e2e-tests:
+    needs: quality-checks
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build Next.js
         run: npm run build
         env:
-          # Provide any necessary mock environment variables for the build to succeed if needed
-          # MONGODB_URI: "mongodb://localhost:27017/mock"
-          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+          NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3005"
+          MONGODB_URI: "mongodb://127.0.0.1:27017/vogueish_test"
+          NEXTAUTH_SECRET: "supersecret123"
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
       - name: Run E2E Tests
         run: npx playwright test
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: "http://127.0.0.1:3005"
+          MONGODB_URI: "mongodb://127.0.0.1:27017/vogueish_test"
+          NEXTAUTH_SECRET: "supersecret123"
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 10

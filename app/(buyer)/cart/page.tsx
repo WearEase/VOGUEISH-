@@ -12,7 +12,9 @@ import { useHomeTrial } from "@/context/HomeTrialContext";
 
 export default function CartPage() {
   const [homeTrial, setHomeTrial] = useState(false);
-  const [homeTrialSlot, setHomeTrialSlot] = useState<"morning" | "afternoon" | "evening" | null>(null);
+  const [homeTrialSlot, setHomeTrialSlot] = useState<string>("");
+  const [selectedForTrial, setSelectedForTrial] = useState<Set<string>>(new Set());
+  
   const {
     trialItems,
     removeFromHomeTrial,
@@ -43,7 +45,47 @@ export default function CartPage() {
   const tax = getTax();
   const total = getTotal();
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const checkoutHref = trialItems.length > 0 ? "/service-fees" : "/checkout";
+  const checkoutHref = (trialItems.length > 0 || (homeTrial && selectedForTrial.size > 0)) ? "/service-fees" : "/checkout";
+
+  const { addToHomeTrial } = useHomeTrial();
+
+  const handleCheckoutClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (homeTrial && selectedForTrial.size > 0) {
+      if (!homeTrialSlot) {
+        e.preventDefault();
+        alert("Please select a time slot for your home trial.");
+        return;
+      }
+      
+      // Move selected items to home trial
+      const itemsToMove = cart.filter(item => selectedForTrial.has(item.id));
+      itemsToMove.forEach(item => {
+        addToHomeTrial(
+          { ...item, mainImage: item.image } as any, 
+          item.size || 'M'
+        );
+        removeItem(item.id);
+      });
+      
+      // Navigate naturally to /service-fees (handled by Link)
+    }
+  };
+
+  const toggleTrialSelection = (id: string) => {
+    setSelectedForTrial(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const timeSlots = [
+    "09:00 AM - 10:00 AM", "10:00 AM - 11:00 AM", "11:00 AM - 12:00 PM", 
+    "12:00 PM - 01:00 PM", "01:00 PM - 02:00 PM", "02:00 PM - 03:00 PM", 
+    "03:00 PM - 04:00 PM", "04:00 PM - 05:00 PM", "05:00 PM - 06:00 PM", 
+    "06:00 PM - 07:00 PM", "07:00 PM - 08:00 PM", "08:00 PM - 09:00 PM"
+  ];
 
   if (isLoading) {
     return (
@@ -105,7 +147,13 @@ export default function CartPage() {
           onToggle={() =>
             setHomeTrial((v) => {
               const next = !v;
-              if (!next) setHomeTrialSlot(null);
+              if (!next) {
+                setHomeTrialSlot("");
+                setSelectedForTrial(new Set());
+              } else {
+                // Auto-select all items by default when turning on
+                setSelectedForTrial(new Set(cart.map(item => item.id)));
+              }
               return next;
             })
           }
@@ -115,49 +163,18 @@ export default function CartPage() {
 
       {homeTrial && (
         <div className="mt-5 pt-5 border-t border-purple-200">
-          <p className="text-sm font-medium text-gray-900">Choose your preferred trial time slot</p>
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button
-              type="button"
-              onClick={() => setHomeTrialSlot("morning")}
-              className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${homeTrialSlot === "morning" ? "border-purple-300 bg-white" : "border-gray-200 bg-white hover:bg-gray-50"}`}
+          <p className="text-sm font-medium text-gray-900 mb-3">Choose your preferred trial time slot</p>
+          <div className="relative max-w-sm">
+            <select
+              value={homeTrialSlot}
+              onChange={(e) => setHomeTrialSlot(e.target.value)}
+              className="block w-full rounded-lg border-gray-300 bg-white py-3 pl-4 pr-10 text-gray-900 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
             >
-              <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-700">
-                <Sunrise className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-900">Morning</div>
-                <div className="text-xs text-gray-500">9 AM - 12 PM</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setHomeTrialSlot("afternoon")}
-              className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${homeTrialSlot === "afternoon" ? "border-purple-300 bg-white" : "border-gray-200 bg-white hover:bg-gray-50"}`}
-            >
-              <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-700">
-                <Sun className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-900">Afternoon</div>
-                <div className="text-xs text-gray-500">12 PM - 3 PM</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setHomeTrialSlot("evening")}
-              className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${homeTrialSlot === "evening" ? "border-purple-300 bg-white" : "border-gray-200 bg-white hover:bg-gray-50"}`}
-            >
-              <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-700">
-                <Moon className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-900">Evening</div>
-                <div className="text-xs text-gray-500">4 PM - 7 PM</div>
-              </div>
-            </button>
+              <option value="" disabled>Select a time slot...</option>
+              {timeSlots.map(slot => (
+                <option key={slot} value={slot}>{slot}</option>
+              ))}
+            </select>
           </div>
         </div>
       )}
@@ -204,13 +221,25 @@ export default function CartPage() {
             {cart.length > 0 && (
               <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
                 {cart.map((item) => (
-                  <div key={item.id} className="p-6">
-                    <CartItem
-                      item={item}
-                      updateQuantity={updateQuantity}
-                      removeItem={removeItem}
-                      moveToWishlist={moveToWishlist}
-                    />
+                  <div key={item.id} className="p-6 flex items-start gap-4">
+                    {homeTrial && (
+                      <div className="mt-8 shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={selectedForTrial.has(item.id)}
+                          onChange={() => toggleTrialSelection(item.id)}
+                          className="h-5 w-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <CartItem
+                        item={item}
+                        updateQuantity={updateQuantity}
+                        removeItem={removeItem}
+                        moveToWishlist={moveToWishlist}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -273,6 +302,7 @@ export default function CartPage() {
             savings={getSavings()}
             freeShippingThreshold={1999}
             checkoutHref={checkoutHref}
+            onCheckoutClick={handleCheckoutClick}
           />
         </div>
       </div>

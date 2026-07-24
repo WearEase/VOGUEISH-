@@ -12,6 +12,7 @@ interface OrderSummaryProps {
   savings?: number;
   freeShippingThreshold?: number;
   checkoutHref?: string;
+  onCheckoutClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 export default function OrderSummary({
@@ -25,6 +26,7 @@ export default function OrderSummary({
   savings = 0,
   freeShippingThreshold = 0,
   checkoutHref = "/billing",
+  onCheckoutClick,
 }: OrderSummaryProps) {
   const remainingForFreeShipping = Math.max(freeShippingThreshold - subtotal, 0);
 
@@ -99,6 +101,7 @@ export default function OrderSummary({
 
         <Link
           href={checkoutHref}
+          onClick={onCheckoutClick}
           className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mb-4"
         >
           Proceed to Checkout

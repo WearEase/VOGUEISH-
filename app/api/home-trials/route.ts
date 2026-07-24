@@ -40,8 +40,12 @@ export async function POST(request: Request) {
       items,
     } = body;
 
+    console.log("HOME TRIALS POST BODY:", body);
+
     if (!id || !userEmail || !fullName || !phone || !addressLine1 || !pincode || !date || !timeSlot || !serviceType || !items) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      const missing = { id: !id, userEmail: !userEmail, fullName: !fullName, phone: !phone, addressLine1: !addressLine1, pincode: !pincode, date: !date, timeSlot: !timeSlot, serviceType: !serviceType, items: !items };
+      console.log("MISSING FIELDS:", missing);
+      return NextResponse.json({ error: 'Missing required fields', missing }, { status: 400 });
     }
 
     await connectDB();
@@ -62,11 +66,15 @@ export async function POST(request: Request) {
       itemsBought: [],
     });
 
-    // Push this trial's _id into the user's homeTrials array
-    await User.findOneAndUpdate(
-      { email: userEmail },
-      { $push: { homeTrials: newTrial._id } }
-    );
+    // Push this trial's _id into the user's homeTrials array if they exist
+    try {
+      await User.findOneAndUpdate(
+        { email: userEmail },
+        { $push: { homeTrials: newTrial._id } }
+      );
+    } catch (updateErr) {
+      console.warn("Failed to push home trial to user profile (guest checkout or DB error):", updateErr);
+    }
 
     return NextResponse.json(newTrial, { status: 201 });
   } catch (error) {

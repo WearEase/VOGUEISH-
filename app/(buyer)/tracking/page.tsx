@@ -15,6 +15,7 @@ function TrackingContent() {
     const [showOtp, setShowOtp] = useState(false);
     const [otp] = useState(4321); // Set expected stylist arrival OTP as 4321
     const [trialId, setTrialId] = useState('HT-8402');
+    const [realOrder, setRealOrder] = useState<any>(null);
 
     React.useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -27,6 +28,13 @@ function TrackingContent() {
 
     React.useEffect(() => {
         if (variant === 'order' && orderId) {
+            fetch(`/api/orders/${orderId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.error) setRealOrder(data);
+                })
+                .catch(console.error);
+
             try {
                 const tracked = JSON.parse(localStorage.getItem('trackedOrders') || '[]');
                 if (!tracked.includes(orderId)) {
@@ -37,6 +45,19 @@ function TrackingContent() {
             }
         }
     }, [variant, orderId]);
+
+    const orderData = realOrder || order;
+    
+    // Dynamic Timings
+    const placedDate = new Date(orderData.createdAt || new Date());
+    const confirmedTime = new Date(placedDate.getTime() + 30 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const shippedTime = new Date(placedDate.getTime() + 45 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    const displayPlacedAt = orderData.createdAt 
+        ? placedDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) 
+        : orderData.placedAt;
+
+    const displayTotalItems = orderData.items ? orderData.items.length : orderData.totalItems;
 
     const handleCompleteService = () => {
         // Simulate next step
@@ -75,7 +96,7 @@ function TrackingContent() {
                             {variant === 'trial' ? 'Tracking Visit #TRK-8821' : 'Tracking Order #ORD-8821'}
                         </h1>
                         <p className="text-center text-sm text-gray-500 mb-8">
-                            {variant === 'trial' ? 'Arriving in approx. 25 mins' : `${order.status} • Estimated delivery: 2–3 days`}
+                            {variant === 'trial' ? 'Arriving in approx. 25 mins' : `${orderData.status} • Estimated delivery: 2–3 days`}
                         </p>
 
                         {/* Agent Info */}
@@ -97,12 +118,12 @@ function TrackingContent() {
                             <div className="relative">
                                 <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm"></div>
                                 <h4 className="text-sm font-semibold">{variant === 'trial' ? 'Booking Confirmed' : 'Order Confirmed'}</h4>
-                                <p className="text-xs text-gray-500 mt-0.5">10:30 AM</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{variant === 'trial' ? '10:30 AM' : confirmedTime}</p>
                             </div>
                             <div className="relative">
                                 <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-sm animate-pulse"></div>
                                 <h4 className="text-sm font-semibold text-blue-600">{variant === 'trial' ? 'Stylist Assigned' : 'Shipped'}</h4>
-                                <p className="text-xs text-gray-500 mt-0.5">10:45 AM</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{variant === 'trial' ? '10:45 AM' : shippedTime}</p>
                             </div>
                             <div className="relative opacity-50">
                                 <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-gray-300 border-2 border-white shadow-sm"></div>
@@ -116,11 +137,11 @@ function TrackingContent() {
                                 <div className="flex items-start justify-between gap-3 flex-wrap">
                                     <div>
                                         <p className="text-xs uppercase tracking-widest text-gray-500">Order Details</p>
-                                        <h4 className="mt-1 font-semibold text-gray-900">{order.id}</h4>
-                                        <p className="text-sm text-gray-600">Placed on {order.placedAt}</p>
+                                        <h4 className="mt-1 font-semibold text-gray-900">{orderData.id}</h4>
+                                        <p className="text-sm text-gray-600">Placed on {displayPlacedAt}</p>
                                     </div>
                                     <div className="text-sm text-gray-600">
-                                        {order.totalItems} item{order.totalItems > 1 ? 's' : ''} • ₹{order.totalAmount.toLocaleString()}
+                                        {displayTotalItems} item{displayTotalItems > 1 ? 's' : ''} • ₹{orderData.totalAmount.toLocaleString()}
                                     </div>
                                 </div>
                             </div>

@@ -2,6 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+const parseNumericPrice = (val: any): number => {
+  if (typeof val === 'number' && !isNaN(val)) return val;
+  if (typeof val === 'string') {
+    const parsed = parseFloat(val.replace(/[^\d.-]/g, ''));
+    return isNaN(parsed) ? 2500 : parsed;
+  }
+  return 2500;
+};
 import Link from 'next/link';
 import Image from 'next/image';
 import { useHomeTrial } from '@/context/HomeTrialContext';
@@ -52,7 +61,7 @@ export default function HomeTrialPaymentPage() {
     setIsProcessing(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    const email = session?.user?.email ?? localUserEmail ?? "buyer@vogueish.com";
+    const email = session?.user?.email || localUserEmail || "buyer@vogueish.com";
     const trialId = `HT-${Math.floor(1000 + Math.random() * 9000)}`;
 
     // Get address details from state/localStorage if available, else mock
@@ -92,12 +101,12 @@ export default function HomeTrialPaymentPage() {
       timeSlot,
       serviceType,
       items: trialItems.map((item) => ({
-        id: item.id,
-        name: item.name,
-        brand: item.brand,
-        price: typeof item.discountedPrice === 'number' ? item.discountedPrice : 2500,
-        selectedSize: item.selectedSize,
-        mainImage: item.mainImage,
+        id: String(item.id || (item as any)._id || Math.random().toString()),
+        name: String(item.name || (item as any).title || 'Unknown Product'),
+        brand: String(item.brand || 'Vogueish'),
+        price: parseNumericPrice(item.discountedPrice || (item as any).price || item.realPrice),
+        selectedSize: String(item.selectedSize || 'M'),
+        mainImage: String(item.mainImage || (item as any).image || ''),
       })),
     };
 

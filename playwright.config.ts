@@ -14,7 +14,7 @@ export default defineConfig({
   use: {
     actionTimeout: 0,
     trace: 'on-first-retry',
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://127.0.0.1:3005',
   },
   projects: [
     {
@@ -23,8 +23,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: 'npx next start -p 3005',
+    url: 'http://127.0.0.1:3005',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
