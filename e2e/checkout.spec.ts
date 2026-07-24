@@ -2,16 +2,53 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Checkout Flow', () => {
   test('should render address selector and add new address', async ({ page }) => {
-    // Navigate to a page that contains the checkout or address flow
-    // (Assuming we mock or navigate to /checkout)
+    // Mock NextAuth session so AddressSelector renders
+    await page.route('**/api/auth/session', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          user: { name: 'Test User', email: 'test@example.com' },
+          expires: '2100-01-01T00:00:00.000Z'
+        }),
+      });
+    });
+
+    // Mock Addresses endpoint
+    await page.route('**/api/user/addresses', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ addresses: [] }),
+      });
+    });
+
+    // Navigate to a blank page first to set localStorage
+    await page.goto('/');
+    await page.evaluate(() => {
+      localStorage.setItem('ecommerce-cart', JSON.stringify([
+        {
+          id: 'mock-id-1',
+          name: 'Mock Product',
+          brand: 'Mock Brand',
+          slug: 'mock-product',
+          price: 1000,
+          quantity: 1,
+          size: 'M',
+          image: '/mock.jpg'
+        }
+      ]));
+    });
+
+    // Navigate to /checkout
     await page.goto('/checkout');
     
-    // We assume the page loads the address selector (even if empty cart, we can test UI presence if we mock cart)
     // Wait for the "Shipping Address" heading
     const heading = page.locator('h2', { hasText: 'Shipping Address' });
-    if (await heading.isVisible()) {
-      // Look for the "Add New Address" button
-      const addNewBtn = page.locator('text=Add New Address');
+    await expect(heading).toBeVisible();
+
+    // Look for the "Add New Address" button
+    const addNewBtn = page.locator('text=Add New Address');
       await expect(addNewBtn).toBeVisible();
 
       // Click to add new address
@@ -30,6 +67,5 @@ test.describe('Checkout Flow', () => {
       const cancelBtn = page.locator('button', { hasText: 'Cancel' });
       await cancelBtn.click();
       await expect(page.locator('text=New Address Details')).not.toBeVisible();
-    }
   });
 });
