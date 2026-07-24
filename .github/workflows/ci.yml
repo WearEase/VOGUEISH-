@@ -35,6 +35,11 @@ jobs:
   e2e-tests:
     needs: quality-checks
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,23 +56,19 @@ jobs:
       - name: Build Next.js
         run: npm run build
         env:
-          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+          NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3005"
+          MONGODB_URI: "mongodb://127.0.0.1:27017/vogueish_test"
+          NEXTAUTH_SECRET: "supersecret123"
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Run Next.js Server
-        run: npm run start &
-        env:
-          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
-
-      - name: Wait for server
-        run: npx wait-on http://localhost:3000
-
       - name: Run E2E Tests
         run: npx playwright test
         env:
-          PLAYWRIGHT_TEST_BASE_URL: "http://localhost:3000"
+          PLAYWRIGHT_TEST_BASE_URL: "http://127.0.0.1:3005"
+          MONGODB_URI: "mongodb://127.0.0.1:27017/vogueish_test"
+          NEXTAUTH_SECRET: "supersecret123"
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
