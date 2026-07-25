@@ -62,3 +62,4 @@ tailors data/
 scripts/seed-tailors.js
 tailors data/
 playwright-report/
+test-results/
