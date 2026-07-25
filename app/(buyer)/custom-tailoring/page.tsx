@@ -93,11 +93,11 @@ const TailoringPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link 
-                href="/my-account#home-trials"
+                href="/home-trials"
                 className="group bg-black text-white px-12 py-4 hover:bg-neutral-800 transition-all duration-300 flex items-center gap-3 text-lg justify-center"
               >
-                Request Alteration
-                <Scissors className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+                Book a Home Trial
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </Link>
               <button 
                 onClick={() => setIsVideoPlaying(true)}

@@ -127,6 +127,15 @@ export default function MyOrdersPage() {
                     Track order
                     <Truck className="w-4 h-4" />
                   </Link>
+                  {order.paymentStatus === 'Paid' && (
+                    <Link
+                      href={`/my-orders/${order.id}/invoice`}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition"
+                    >
+                      View Invoice
+                      <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  )}
                   {trackedOrders.includes(order.id) && (
                     <Link
                       href={`/alteration?orderId=${order.id}`}

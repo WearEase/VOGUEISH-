@@ -9,6 +9,7 @@ const coupons: Coupon[] = [
   { code: "WELCOME20", discount: 20, description: "New customer discount", minOrder: 2000, maxDiscount: 500 },
   { code: "PREMIUM25", discount: 25, description: "Premium member exclusive", minOrder: 5000, maxDiscount: 1000 },
   { code: "FLAT500", discount: 500, description: "Flat ₹500 off", minOrder: 3000 },
+  { code: "TEST1", discount: 0, description: "Test payment of ₹1", minOrder: 0 },
 ];
 
 const CART_KEY = 'ecommerce-cart';
@@ -274,9 +275,17 @@ export const useCart = () => {
       return false;
     }
     
-    if (validCoupon.minOrder && subtotal < validCoupon.minOrder) {
+    if (validCoupon.minOrder && subtotal < validCoupon.minOrder && validCoupon.code !== "TEST1") {
       showNotification(`Minimum order of ₹${validCoupon.minOrder.toLocaleString()} required`);
       return false;
+    }
+    
+    if (validCoupon.code === "TEST1") {
+      setDiscount(subtotal - 1); // Not exact, but we handle the hard total in getTotal()
+      setDiscountType('flat');
+      setAppliedCoupon(couponCode.toUpperCase());
+      showNotification("Test mode active: Total is exactly ₹1");
+      return true;
     }
     
     let discountAmount = validCoupon.discount;
@@ -316,15 +325,18 @@ export const useCart = () => {
   };
 
   const getShippingFee = (): number => {
+    if (appliedCoupon === 'TEST1') return 0;
     const subtotal = getSubtotal();
     return subtotal >= 1999 ? 0 : 214; // Free shipping above ₹1999
   };
 
   const getTax = (): number => {
+    if (appliedCoupon === 'TEST1') return 0;
     return Math.round((getSubtotal() - discount) * 0.18); // 18% GST
   };
 
   const getTotal = (): number => {
+    if (appliedCoupon === 'TEST1') return 1;
     return getSubtotal() - discount + getShippingFee() + getTax();
   };
 

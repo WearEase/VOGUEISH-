@@ -22,7 +22,7 @@ function BillingContent() {
 
   const [keptItems, setKeptItems] = useState<KeptItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState('card');
+  const [selectedMethod, setSelectedMethod] = useState('online');
   const [localUserEmail, setLocalUserEmail] = useState('');
 
   useEffect(() => {
@@ -117,17 +117,94 @@ function BillingContent() {
 
   const handlePayment = async () => {
     setIsProcessing(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // If home trial purchase, clear localStorage active fields
-    if (source === 'home-trial-buy') {
-      localStorage.removeItem('activeHomeTrialId');
-      localStorage.removeItem('activeHomeTrialOtp');
+    if (selectedMethod === 'online' && totalPayable > 0) {
+      // Load Razorpay SDK
+      const res = await new Promise((resolve) => {
+        if ((window as any).Razorpay) return resolve(true);
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+
+      if (!res) {
+        toast.error('Razorpay SDK failed to load. Check your connection.');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Create Razorpay Order
+      try {
+        const createRes = await fetch('/api/razorpay/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: totalPayable }),
+        });
+        const orderData = await createRes.json();
+        if (!createRes.ok || !orderData.orderId) {
+          toast.error(orderData.error || 'Failed to initialize payment');
+          setIsProcessing(false);
+          return;
+        }
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+          amount: orderData.amount,
+          currency: "INR",
+          name: "Vogueish",
+          description: source === 'home-trial-buy' ? "Home Trial Purchase" : "Order Payment",
+          order_id: orderData.orderId,
+          handler: async function (response: any) {
+            const verifyRes = await fetch('/api/razorpay/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              if (source === 'home-trial-buy') {
+                localStorage.removeItem('activeHomeTrialId');
+                localStorage.removeItem('activeHomeTrialOtp');
+              }
+              toast.success('Payment successful!');
+              router.push('/thank-you');
+            } else {
+              toast.error('Payment verification failed.');
+              setIsProcessing(false);
+            }
+          },
+          prefill: { email: session?.user?.email || localUserEmail || "buyer@vogueish.com" },
+          theme: { color: "#000000" },
+        };
+        
+        const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', function () {
+          toast.error('Payment failed or cancelled.');
+          setIsProcessing(false);
+        });
+        rzp.open();
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to start Razorpay payment.");
+        setIsProcessing(false);
+      }
+    } else {
+      // Cash on delivery or zero amount
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (source === 'home-trial-buy') {
+        localStorage.removeItem('activeHomeTrialId');
+        localStorage.removeItem('activeHomeTrialOtp');
+      }
+      toast.success('Order confirmed!');
+      router.push('/thank-you');
+      setIsProcessing(false);
     }
-
-    toast.success('Payment successful!');
-    router.push('/thank-you');
-    setIsProcessing(false);
   };
 
   return (
@@ -197,8 +274,7 @@ function BillingContent() {
         <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 ml-1">Payment Method</h3>
         <div className="space-y-3 mb-8">
           {[
-            { value: 'card', label: 'Credit / Debit Card' },
-            { value: 'upi', label: 'UPI / Wallet' },
+            { value: 'online', label: 'Pay Online' },
             { value: 'cod', label: 'Cash on Delivery' },
           ].map((method) => (
             <label
