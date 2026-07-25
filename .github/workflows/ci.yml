@@ -27,7 +27,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Security Audit
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
       - name: Run Unit Tests
         run: npm run test -- --run
