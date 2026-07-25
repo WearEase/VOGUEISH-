@@ -82,6 +82,16 @@ export default function MyAccountPage() {
 
   // Selection state for completed trial checkout
   const [selectedTrialItems, setSelectedTrialItems] = useState<Record<string, string[]>>({});
+  const [alteredItems, setAlteredItems] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    try {
+      const existing = JSON.parse(localStorage.getItem('requestedAlterations') || '{}');
+      setAlteredItems(existing);
+    } catch(e) {
+      // ignore
+    }
+  }, []);
 
   // Profile Edit state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -615,12 +625,18 @@ export default function MyAccountPage() {
                                 <span className="text-[10px] text-green-600 font-bold uppercase tracking-wider flex items-center gap-1">
                                   <CheckCircle2 className="w-3 h-3" /> Verification Cleared
                                 </span>
-                                <Link
-                                  href={`/alteration?trialId=${trial.id}&productName=${encodeURIComponent(item.name)}`}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-black hover:bg-black hover:text-white text-xs font-medium transition"
-                                >
-                                  <Scissors className="w-3 h-3 mr-1" /> Request Alteration
-                                </Link>
+                                {alteredItems[`${trial.id}_${item.name}`] ? (
+                                  <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+                                    <CheckCircle2 className="w-3 h-3" /> Alteration Requested
+                                  </span>
+                                ) : (
+                                  <Link
+                                    href={`/alteration?trialId=${trial.id}&productName=${encodeURIComponent(item.name)}`}
+                                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-black hover:bg-black hover:text-white text-xs font-medium transition"
+                                  >
+                                    <Scissors className="w-3 h-3 mr-1" /> Request Alteration
+                                  </Link>
+                                )}
                               </div>
                             ) : (
                               <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-1.5 text-amber-600 text-xs">

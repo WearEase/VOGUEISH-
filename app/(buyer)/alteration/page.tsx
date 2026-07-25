@@ -60,6 +60,11 @@ const ISSUE_TO_ALTERATION_MAP: Record<string, { types: string[]; defaultArea: st
 
 function AlterationContent() {
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // URL Params prefill
   const paramTrialId = searchParams.get("trialId") || searchParams.get("orderId") || "";
@@ -226,8 +231,17 @@ function AlterationContent() {
     setIsSubmitting(true);
     setTimeout(() => {
       setTrackingId(`ALT-${Math.floor(100000 + Math.random() * 900000)}`);
+      
+      try {
+        const existing = JSON.parse(localStorage.getItem('requestedAlterations') || '{}');
+        existing[`${selectedOrder}_${selectedProduct}`] = true;
+        localStorage.setItem('requestedAlterations', JSON.stringify(existing));
+      } catch (e) {
+        console.error(e);
+      }
+
       setIsSubmitting(false);
-      setFormStep(7);
+      setFormStep(6);
     }, 1500);
   };
 
@@ -251,6 +265,16 @@ function AlterationContent() {
     setIsConfirmed(false);
     setTrackingId("");
   };
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-zinc-50 py-20 px-6">
+        <div className="max-w-4xl mx-auto flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 py-20 px-6">
