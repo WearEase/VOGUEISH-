@@ -36,7 +36,7 @@ const checkoutSchema = z.object({
   zipCode: z.string().min(4, 'ZIP / Pincode is required'),
   country: z.string().min(1, 'Country is required'),
   phone: z.string().min(10, 'Valid phone number is required'),
-  payment: z.enum(['card', 'upi', 'cod']),
+  payment: z.enum(['online', 'cod']),
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
@@ -46,6 +46,7 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { data: session } = useSession();
   const [localUserEmail, setLocalUserEmail] = useState('');
+  const [couponInput, setCouponInput] = useState('');
   React.useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -68,6 +69,8 @@ export default function CheckoutPage() {
     getTotal,
     appliedCoupon,
     discount,
+    applyCouponCode,
+    removeCoupon,
   } = useCart();
 
   // Sync cart to MongoDB on mount for cross-device sync
@@ -98,7 +101,7 @@ export default function CheckoutPage() {
       zipCode: '',
       phone: '',
       country: 'India',
-      payment: 'card',
+      payment: 'online',
     },
   });
 
@@ -394,8 +397,7 @@ export default function CheckoutPage() {
                       <div className="p-6 space-y-3">
                         {(
                           [
-                            { value: 'card' as const, label: 'Credit / Debit Card' },
-                            { value: 'upi' as const, label: 'UPI / Wallet' },
+                            { value: 'online' as const, label: 'Pay Online' },
                             { value: 'cod' as const, label: 'Cash on Delivery' },
                           ] as const
                         ).map((method) => (
@@ -437,10 +439,29 @@ export default function CheckoutPage() {
                 <span className="font-medium">₹{subtotal.toLocaleString()}</span>
               </div>
 
-              {discount > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Discount ({appliedCoupon})</span>
-                  <span className="font-medium text-green-600">-₹{discount.toLocaleString()}</span>
+              {discount > 0 ? (
+                <div className="flex justify-between items-center text-green-600 bg-green-50 p-2 rounded">
+                  <span className="text-sm">Discount ({appliedCoupon})</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">-₹{discount.toLocaleString()}</span>
+                    <button onClick={removeCoupon} className="text-xs underline hover:text-green-800">Remove</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 py-2">
+                  <input
+                    type="text"
+                    placeholder="Enter Coupon Code"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    className="flex-1 text-sm px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-black uppercase"
+                  />
+                  <button 
+                    onClick={() => { if(couponInput) applyCouponCode(couponInput); }}
+                    className="px-4 py-1.5 bg-black text-white text-sm rounded-lg hover:bg-gray-800"
+                  >
+                    Apply
+                  </button>
                 </div>
               )}
 

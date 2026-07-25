@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { OrderModel } from '@/models/Order';
 import { User } from '@/models/UserSchema';
+import Invoice from '@/models/Invoice';
 
 export async function GET(request: Request) {
   try {
@@ -39,6 +40,9 @@ export async function POST(request: Request) {
       discount,
       totalAmount,
       paymentMethod,
+      razorpayOrderId,
+      razorpayPaymentId,
+      paymentStatus,
     } = body;
 
     if (!id || !userEmail || !firstName || !lastName || !phone || !shippingAddress || !items || totalAmount === undefined || !paymentMethod) {
@@ -60,6 +64,9 @@ export async function POST(request: Request) {
       discount: discount || 0,
       totalAmount,
       paymentMethod,
+      paymentStatus: paymentStatus || (paymentMethod === 'cod' ? 'Pending' : 'Paid'),
+      razorpayOrderId,
+      razorpayPaymentId,
       status: 'Processing',
       trackingHref: `/tracking?orderId=${id}`
     });
@@ -71,6 +78,32 @@ export async function POST(request: Request) {
       );
     } catch (updateErr) {
       console.warn("Failed to push order to user profile (guest checkout or DB error):", updateErr);
+    }
+
+    if (razorpayPaymentId) {
+      try {
+        await Invoice.create({
+          invoiceId: `INV-${Math.floor(1000 + Math.random() * 9000)}`,
+          orderId: id,
+          userEmail,
+          billingAddress: shippingAddress, // Assuming same for now
+          items: items.map((item: any) => ({
+            productId: item.productId,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          subtotal,
+          tax,
+          shippingFee,
+          total: totalAmount,
+          razorpayPaymentId,
+          razorpayOrderId,
+          status: 'Paid',
+        });
+      } catch (invoiceErr) {
+        console.error("Failed to create invoice:", invoiceErr);
+      }
     }
 
     return NextResponse.json(newOrder, { status: 201 });

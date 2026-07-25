@@ -1,4 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+﻿# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
 /node_modules
@@ -54,4 +54,11 @@ scripts/scrapeLashkaraa.js
 
 #public data
 public/VOGUEISH NGOs Sheet - Sheet1.csv
+playwright-report/scripts/seed-tailors.js
+
+tailors data/
+
+
+scripts/seed-tailors.js
+tailors data/
 playwright-report/

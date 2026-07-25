@@ -57,6 +57,10 @@ function TrackingContent() {
         ? placedDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) 
         : orderData.placedAt;
 
+    // For trials, use the scheduled date for timeline
+    const trialDateText = orderData.date ? new Date(orderData.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+    const trialTimeText = orderData.timeSlot || '';
+
     const displayTotalItems = orderData.items ? orderData.items.length : orderData.totalItems;
 
     const handleCompleteService = () => {
@@ -96,7 +100,9 @@ function TrackingContent() {
                             {variant === 'trial' ? 'Tracking Visit #TRK-8821' : 'Tracking Order #ORD-8821'}
                         </h1>
                         <p className="text-center text-sm text-gray-500 mb-8">
-                            {variant === 'trial' ? 'Arriving in approx. 25 mins' : `${orderData.status} • Estimated delivery: 2–3 days`}
+                            {variant === 'trial' 
+                                ? (orderData.date && orderData.timeSlot ? `Scheduled for ${trialDateText} at ${trialTimeText}` : 'Arriving in approx. 25 mins') 
+                                : `${orderData.status || 'Processing'} • Arriving in estimated 3-4 days`}
                         </p>
 
                         {/* Agent Info */}
@@ -118,16 +124,16 @@ function TrackingContent() {
                             <div className="relative">
                                 <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm"></div>
                                 <h4 className="text-sm font-semibold">{variant === 'trial' ? 'Booking Confirmed' : 'Order Confirmed'}</h4>
-                                <p className="text-xs text-gray-500 mt-0.5">{variant === 'trial' ? '10:30 AM' : confirmedTime}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{variant === 'trial' ? `${trialDateText}` : displayPlacedAt}</p>
                             </div>
                             <div className="relative">
                                 <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-sm animate-pulse"></div>
                                 <h4 className="text-sm font-semibold text-blue-600">{variant === 'trial' ? 'Stylist Assigned' : 'Shipped'}</h4>
-                                <p className="text-xs text-gray-500 mt-0.5">{variant === 'trial' ? '10:45 AM' : shippedTime}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{variant === 'trial' ? `${trialTimeText}` : shippedTime}</p>
                             </div>
                             <div className="relative opacity-50">
                                 <div className="absolute -left-[21px] top-0 w-4 h-4 rounded-full bg-gray-300 border-2 border-white shadow-sm"></div>
-                                <h4 className="text-sm font-semibold">{variant === 'trial' ? 'Service Started' : 'Out for Delivery'}</h4>
+                                <h4 className="text-sm font-semibold">{variant === 'trial' ? 'Stylist Arrival' : 'Out for Delivery'}</h4>
                                 <p className="text-xs text-gray-500 mt-0.5">Pending</p>
                             </div>
                         </div>

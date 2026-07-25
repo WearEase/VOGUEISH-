@@ -64,7 +64,8 @@ export default function MyAccountPage() {
   const { data: session, status } = useSession();
   const [localUser, setLocalUser] = useState<LocalUser | null>(() => readLocalUser());
 
-  // States for Home Trials & Donations
+  // States for Orders, Home Trials & Donations
+  const [orders, setOrders] = useState<any[]>([]);
   const [homeTrials, setHomeTrials] = useState<HomeTrial[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [wishlist, setWishlist] = useState<{ id: string; name: string; brand: string; price: number; image: string; slug?: string }[]>([]);
@@ -140,6 +141,14 @@ export default function MyAccountPage() {
           }
         } else {
           initTrials();
+        }
+
+        const resOrders = await fetch(`/api/orders?email=${encodeURIComponent(email)}`);
+        if (resOrders.ok) {
+          const data = await resOrders.json();
+          if (data && data.length > 0) {
+            setOrders(data);
+          }
         }
 
         const resDonations = await fetch(`/api/donations?email=${encodeURIComponent(email)}`);
@@ -504,9 +513,30 @@ export default function MyAccountPage() {
               </div>
 
               <div className="divide-y divide-gray-100">
-                <div className="p-8 text-center text-gray-500 text-sm">
-                  Track all your past and current purchases from the dedicated Orders page.
-                </div>
+                {orders.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 text-sm">
+                    Track all your past and current purchases from the dedicated Orders page.
+                  </div>
+                ) : (
+                  orders.slice(0, 3).map((order) => (
+                    <div key={order.id} className="p-6 sm:p-8 flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs text-gray-400 font-medium">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                        <h3 className="mt-0.5 text-base font-semibold text-gray-900">{order.id}</h3>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {order.items.length} item{order.items.length > 1 ? "s" : ""} • ₹{order.totalAmount.toLocaleString()}
+                        </p>
+                      </div>
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                        order.status === 'Cancelled' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </section>
 

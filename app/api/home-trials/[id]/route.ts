@@ -2,6 +2,24 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { HomeTrialModel } from '@/models/HomeTrial';
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await connectDB();
+    const { id } = await params;
+    const trial = await HomeTrialModel.findOne({ id }).lean();
+    if (!trial) {
+      return NextResponse.json({ error: 'Home Trial not found' }, { status: 404 });
+    }
+    return NextResponse.json(trial);
+  } catch (error) {
+    console.error("API error fetching Home Trial:", error);
+    return NextResponse.json({ error: 'Failed to fetch Home Trial' }, { status: 500 });
+  }
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

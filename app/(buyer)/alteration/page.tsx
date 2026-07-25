@@ -62,13 +62,13 @@ function AlterationContent() {
   const searchParams = useSearchParams();
 
   // URL Params prefill
-  const paramTrialId = searchParams.get("trialId") || "";
+  const paramTrialId = searchParams.get("trialId") || searchParams.get("orderId") || "";
   const paramProductName = searchParams.get("productName") || "";
 
   // Alteration Request Flow Form State
   const [formStep, setFormStep] = useState(1);
-  const [selectedOrder, setSelectedOrder] = useState("ORD-8821");
-  const [selectedProduct, setSelectedProduct] = useState("Product 1");
+  const [selectedOrder, setSelectedOrder] = useState(paramTrialId);
+  const [selectedProduct, setSelectedProduct] = useState(paramProductName || "Product 1");
   const [selectedIssue, setSelectedIssue] = useState("");
   const [customIssue, setCustomIssue] = useState("");
   const [selectedAlterationType, setSelectedAlterationType] = useState("");
@@ -92,6 +92,12 @@ function AlterationContent() {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [trackingId, setTrackingId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Tailor Selection State
+  const [tailors, setTailors] = useState<any[]>([]);
+  const [isFetchingTailors, setIsFetchingTailors] = useState(false);
+  const [selectedTailor, setSelectedTailor] = useState<any>(null);
+  const [searchArea, setSearchArea] = useState("");
 
   // Initialize with URL query parameters if available
   useEffect(() => {
@@ -128,6 +134,58 @@ function AlterationContent() {
       setSelectedProduct(orderProducts[0]);
     }
   }, [selectedOrder, orderProducts, selectedProduct]);
+
+  // Fetch Address from Order or Home Trial to prefill tailor search area
+  useEffect(() => {
+    const fetchAddress = async () => {
+      if (!selectedOrder) return;
+      try {
+        const endpoint = selectedOrder.startsWith("HT-") 
+          ? `/api/home-trials/${selectedOrder}`
+          : `/api/orders/${selectedOrder}`;
+          
+        const res = await fetch(endpoint);
+        if (res.ok) {
+          const data = await res.json();
+          const addressObj = data.address || data.shippingAddress;
+          if (addressObj) {
+            setSearchArea(addressObj.postalCode || addressObj.city || "");
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch order address", e);
+      }
+    };
+    fetchAddress();
+  }, [selectedOrder]);
+
+  // Fetch Tailors when Step 5 is active
+  useEffect(() => {
+    if (formStep === 5 && tailors.length === 0) {
+      fetchTailors();
+    }
+  }, [formStep]);
+
+  const fetchTailors = async (queryArea?: string) => {
+    setIsFetchingTailors(true);
+    try {
+      const area = queryArea || searchArea || (selectedOrder.startsWith("HT-") ? "Rohini" : "");
+      const res = await fetch(`/api/tailors?area=${encodeURIComponent(area)}`);
+      const data = await res.json();
+      if (data.success) {
+        setTailors(data.tailors);
+      }
+    } catch (e) {
+      console.error("Error fetching tailors", e);
+    } finally {
+      setIsFetchingTailors(false);
+    }
+  };
+
+  const handleSearchTailors = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchTailors(searchArea);
+  };
 
   // Handle mock file uploads
   const handleSimulateUpload = (type: "fit" | "wear", fileName: string) => {
@@ -169,7 +227,7 @@ function AlterationContent() {
     setTimeout(() => {
       setTrackingId(`ALT-${Math.floor(100000 + Math.random() * 900000)}`);
       setIsSubmitting(false);
-      setFormStep(6);
+      setFormStep(7);
     }, 1500);
   };
 
@@ -188,6 +246,8 @@ function AlterationContent() {
     setRefImageWearName("");
     setTimelineOption("Standard Timeline");
     setSpecificDate("");
+    setSelectedTailor(null);
+    setSearchArea("");
     setIsConfirmed(false);
     setTrackingId("");
   };
@@ -208,17 +268,39 @@ function AlterationContent() {
           </p>
         </div>
 
-        {/* Form Wizard Card */}
-        <div className="bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden transition-all duration-300">
-          {/* Step Indicators */}
-          {formStep <= 5 && (
+        {!paramTrialId ? (
+          <div className="bg-white rounded-3xl shadow-xl border border-zinc-100 p-12 text-center">
+            <h2 className="text-2xl font-semibold text-zinc-900 mb-4">No active order selected</h2>
+            <p className="text-zinc-500 mb-8 max-w-md mx-auto">
+              To request custom tailoring or alterations, you must first have an active Home Trial or an existing order.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link 
+                href="/home-trials"
+                className="bg-black text-white px-8 py-3 rounded-full text-sm font-semibold hover:bg-neutral-800 transition"
+              >
+                Book a Home Trial
+              </Link>
+              <Link 
+                href="/my-orders"
+                className="bg-white text-black border border-zinc-200 px-8 py-3 rounded-full text-sm font-semibold hover:bg-zinc-50 transition"
+              >
+                View My Orders
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden transition-all duration-300">
+            {/* Step Indicators */}
+            {formStep <= 6 && (
             <div className="border-b border-zinc-100 bg-zinc-50/50 px-8 py-5 flex items-center justify-between overflow-x-auto gap-4">
               {[
                 { label: "Product Info", stepNum: 1 },
                 { label: "Issue", stepNum: 2 },
                 { label: "Requirements", stepNum: 3 },
                 { label: "Timeline", stepNum: 4 },
-                { label: "Confirm", stepNum: 5 }
+                { label: "Tailor", stepNum: 5 },
+                { label: "Confirm", stepNum: 6 }
               ].map((s) => (
                 <div key={s.stepNum} className="flex items-center gap-2 flex-shrink-0">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${
@@ -683,8 +765,77 @@ function AlterationContent() {
               </div>
             )}
 
-            {/* STEP 5: REVIEW & SUMMARY */}
+            {/* STEP 5: TAILOR SELECTION */}
             {formStep === 5 && (
+              <div className="space-y-8 animate-fadeIn">
+                <div>
+                  <h3 className="text-lg font-medium text-zinc-900 mb-2">Select Your Tailor</h3>
+                  <p className="text-xs text-zinc-500">Choose a nearby expert to handle your alteration.</p>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={searchArea}
+                    onChange={(e) => setSearchArea(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearchTailors(e); }}
+                    placeholder="Search by Area, Sector, or Pincode"
+                    className="flex-1 bg-white border border-zinc-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+                  />
+                  <button type="button" onClick={handleSearchTailors} className="bg-zinc-900 text-white px-4 py-2 rounded-xl text-sm font-semibold">Search</button>
+                </div>
+
+                {isFetchingTailors ? (
+                  <div className="py-12 flex justify-center">
+                    <div className="w-8 h-8 border-4 border-zinc-200 border-t-black rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {tailors.length > 0 ? (
+                      tailors.map(tailor => (
+                        <div 
+                          key={tailor._id}
+                          onClick={() => setSelectedTailor(tailor)}
+                          className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedTailor?._id === tailor._id ? "border-black bg-zinc-50 shadow" : "border-zinc-200 hover:border-zinc-300"}`}
+                        >
+                          <h4 className="text-sm font-bold text-zinc-900">{tailor.shopName}</h4>
+                          <p className="text-xs text-zinc-600 mt-1">{tailor.address || tailor.area}</p>
+                          {tailor.pincode && <p className="text-xs text-zinc-500 mt-0.5">Pincode: {tailor.pincode}</p>}
+                          {tailor.services && <p className="text-[10px] text-emerald-700 font-semibold mt-2">{tailor.services}</p>}
+                          {tailor.contact && <p className="text-[10px] text-zinc-500 mt-1">Contact: {tailor.contact}</p>}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-full py-8 text-center text-zinc-500 text-sm">No tailors found in this area.</div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex justify-between pt-6 border-t border-zinc-100">
+                  <button
+                    type="button"
+                    onClick={() => setFormStep(4)}
+                    className="border border-zinc-300 hover:bg-zinc-50 text-zinc-700 px-6 py-3 rounded-full text-sm font-semibold flex items-center gap-2 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Back
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={!selectedTailor}
+                    onClick={() => setFormStep(6)}
+                    className="bg-black hover:bg-neutral-800 text-white px-8 py-3 rounded-full text-sm font-semibold flex items-center gap-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Review Request
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 6: REVIEW & SUMMARY */}
+            {formStep === 6 && (
               <div className="space-y-8 animate-fadeIn">
                 <div>
                   <h3 className="text-lg font-medium text-zinc-900 mb-2">Review Your Request</h3>
@@ -751,6 +902,14 @@ function AlterationContent() {
                       </div>
                     </div>
                   </div>
+
+                  {selectedTailor && (
+                    <div className="p-4 bg-zinc-100/50">
+                      <span className="text-[10px] uppercase font-bold text-zinc-400">Assigned Tailor</span>
+                      <div className="text-sm font-semibold text-zinc-900 mt-0.5">{selectedTailor.shopName}</div>
+                      <div className="text-xs text-zinc-500">{selectedTailor.address || selectedTailor.area}, {selectedTailor.pincode}</div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Confirmation Checkbox */}
@@ -770,7 +929,7 @@ function AlterationContent() {
                 <div className="flex justify-between pt-6 border-t border-zinc-100">
                   <button
                     type="button"
-                    onClick={() => setFormStep(4)}
+                    onClick={() => setFormStep(5)}
                     className="border border-zinc-300 hover:bg-zinc-50 text-zinc-700 px-6 py-3 rounded-full text-sm font-semibold flex items-center gap-2 transition-colors animate-fadeIn"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -843,6 +1002,7 @@ function AlterationContent() {
             )}
           </form>
         </div>
+        )}
       </div>
     </div>
   );
