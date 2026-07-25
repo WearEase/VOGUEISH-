@@ -18,7 +18,11 @@ export async function GET(request: Request) {
       filter = {
         $or: [
           { area: { $regex: area, $options: 'i' } },
-          { address: { $regex: area, $options: 'i' } }
+          { address: { $regex: area, $options: 'i' } },
+          { shopName: { $regex: area, $options: 'i' } },
+          { services: { $regex: area, $options: 'i' } },
+          { pincode: { $regex: area, $options: 'i' } },
+          { contact: { $regex: area, $options: 'i' } }
         ]
       };
     }
